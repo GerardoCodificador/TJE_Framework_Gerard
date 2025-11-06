@@ -86,39 +86,60 @@ void EntityMesh::render(Camera* camera) {
 		return;
 	}
 
-	if(!material->shader){
-		material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/pulse.fs");
+
+
+
+	if (isInstanced) {
+
+		if (!material->shader) {
+			material->shader = Shader::Get("data/shaders/instanced.vs", "data/shaders/texture.fs");
+		}
+		// Set OpenGL flags
+		Shader* shader = material->shader;
+		shader->enable();
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+
+		shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+
+		shader->setUniform("u_color", material->color);
+		if (material->diffuse)
+			shader->setUniform("u_texture", material->diffuse);
+		mesh->renderInstanced(GL_TRIANGLES, models.data(), models.size());
+		shader->disable();
 	}
+	else{
+		if(!material->shader){
+			material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+		}
+		Shader* shader = material->shader;
+		// Set OpenGL flags
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		shader->enable();
+		
+
+		// Enable shader and pass uniforms 
+		shader->setUniform("u_model", model);
+		shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+		shader->setUniform("u_color", material->color);
+		shader->setUniform("u_pulse_color", pulse.color);
+		shader->setUniform("u_pulse_width",pulse.width);
+		shader->setUniform3("u_pulse_center", pulse.center);
+		shader->setUniform("u_pulse_radius", pulse.radius);
+		shader->setUniform("u_pulse_active", pulse.active);
+		if(material->diffuse)shader->setTexture("u_texture", material->diffuse, 0);
 
 
+		// Render the mesh using the active shader
+		mesh->render(GL_TRIANGLES);
 
-	Shader* shader = material->shader;
-	// Set OpenGL flags
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-
-	// Enable shader and pass uniforms 
-	shader->enable();
-	shader->setUniform("u_model", model);
-	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
-	shader->setUniform("u_color", material->color);
-	shader->setUniform("u_pulse_color", pulse.color);
-	shader->setUniform("u_pulse_width",pulse.width);
-	shader->setUniform3("u_pulse_center", pulse.center);
-	shader->setUniform("u_pulse_radius", pulse.radius);
-	shader->setUniform("u_pulse_active", pulse.active);
-	if(material->diffuse)shader->setTexture("u_texture", material->diffuse, 0);
-
-
-	// Render the mesh using the active shader
-	mesh->render(GL_TRIANGLES);
-
-	// Render the mesh using the active shader
-	mesh->render(GL_TRIANGLES);
-
+		shader->disable();
+	}
 	// Disable shader after finishing rendering
-	shader->disable();
+	
 	Entity::render(camera);
 };
 
