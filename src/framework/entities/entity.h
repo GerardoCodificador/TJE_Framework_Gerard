@@ -51,6 +51,7 @@ public:
 	}; 			// Constructor
 	virtual ~EntityMesh() {}; 	// Destructor
 	// Attributes of the derived class  
+	std::vector<Matrix44> getArrayofGlobalMatrix();
 	Mesh* mesh = nullptr;
 
 	Texture* texture = nullptr;

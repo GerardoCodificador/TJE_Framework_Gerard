@@ -63,6 +63,15 @@ void EntityMesh::update(float elapsed_time) {
 	// You can add custom update code here for EntityMesh
 	Entity::update(elapsed_time); // Call base class update to update children
 }
+std::vector<Matrix44> EntityMesh::getArrayofGlobalMatrix() {
+	std::vector<Matrix44> output;
+	if (parent){
+		for(int i=0;i<models.size();i++)
+			output.push_back(models[i] * parent->getGlobalMatrix());
+		return output;
+	}
+	return models;
+}
 void EntityMesh::render(Camera* camera) {
 
 	if(!mesh){
@@ -70,23 +79,51 @@ void EntityMesh::render(Camera* camera) {
 		return;
 	}
 
-	const Matrix44& globalMat = getGlobalMatrix();
-	float distance = 10.0f;
-	BoundingBox box = transformBoundingBox(globalMat, mesh->box);
+	std::vector<Matrix44> MatstoRender;
+	if (isInstanced) {
+		const std::vector<Matrix44> globalMats = getArrayofGlobalMatrix();
+		float distance = 10.0f;
+		BoundingBox box;
+		bool skip = false;
+		for (int i = 0; i < models.size(); i++) {
+			box=transformBoundingBox(globalMats[i], mesh->box);
+			if (camera->eye.distance(box.center) > distance + box.halfsize.length()) {
+				skip = true;
+			}
 
-	//Distance CUlling
-	if (camera->eye.distance(box.center) > distance + box.halfsize.length()) {
-		Entity::render(camera);
-		return;
+			//Frustum Culling
+			if (camera->testSphereInFrustum(box.center, box.halfsize.length()) != CLIP_INSIDE) {
+				skip = true;
+			}
+			if (!skip) {
+				MatstoRender.push_back(models[i]);
+			}
+			skip = false;
+
+		}
+		if (MatstoRender.size() < 1) {
+			Entity::render(camera);
+			return;
+		}
 	}
+	else{
+		const Matrix44& globalMat = getGlobalMatrix();
+		float distance = 10.0f;
+		BoundingBox box = transformBoundingBox(globalMat, mesh->box);
 
-	//Frustum Culling
-	if (camera->testSphereInFrustum(box.center, box.halfsize.length()) != CLIP_INSIDE) {
-		Entity::render(camera);
-		return;
+		//Distance CUlling
+		if (camera->eye.distance(box.center) > distance + box.halfsize.length()) {
+			Entity::render(camera);
+			return;
+		}
+
+		//Frustum Culling
+		if (camera->testSphereInFrustum(box.center, box.halfsize.length()) != CLIP_INSIDE) {
+			Entity::render(camera);
+			return;
+		}
+
 	}
-
-
 
 
 	if (isInstanced) {
@@ -106,7 +143,7 @@ void EntityMesh::render(Camera* camera) {
 		shader->setUniform("u_color", material->color);
 		if (material->diffuse)
 			shader->setUniform("u_texture", material->diffuse);
-		mesh->renderInstanced(GL_TRIANGLES, models.data(), models.size());
+		mesh->renderInstanced(GL_TRIANGLES, MatstoRender.data(), MatstoRender.size());
 		shader->disable();
 	}
 	else{
