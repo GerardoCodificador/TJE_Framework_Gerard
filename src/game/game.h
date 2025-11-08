@@ -8,6 +8,7 @@
 #include "framework/camera.h"
 #include "framework/utils.h"
 #include "framework/pulse.h"
+#include "framework/stage.h"
 
 class Game
 {
@@ -28,7 +29,7 @@ public:
 
 	//some vars
 	Camera* camera; //our global camera
-	bool mouse_locked; //tells if the mouse is locked (not seen)
+	
 
 	Game( int window_width, int window_height, SDL_Window* window );
 
@@ -37,6 +38,8 @@ public:
 	void update( double dt );
 
 	void setMouseLocked(bool must_lock);
+
+	void setStage(eStage nextStage);
 
 	//events
 	void onKeyDown( SDL_KeyboardEvent event );

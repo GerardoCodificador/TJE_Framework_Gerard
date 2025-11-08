@@ -10,18 +10,16 @@
 
 #include <cmath>
 #include "framework/pulse.h"
+#include "framework/stage.h"
 
 //some globals
 
-Mesh* mesh = NULL;
-Texture* texture = NULL;
-Shader* shader = NULL;
-float angle = 0;
-float mouse_speed = 1.0f;
-Entity* root = nullptr;
+float mouse_gspeed = 1.0f;
+bool mouse_glocked;
+eStage currentStage = eStage::STAGE_MENU;
+std::map<eStage, Stage*> stages;
 Game* Game::instance = NULL;
 EntityMesh* ent=nullptr;
-EntityMesh* skybox = nullptr;
 Game::Game(int window_width, int window_height, SDL_Window* window)
 {
 	this->window_width = window_width;
@@ -34,39 +32,22 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	frame = 0;
 	time = 0.0f;
 	elapsed_time = 0.0f;
-	mouse_locked = false;
-
-	// OpenGL flags
-	glEnable( GL_CULL_FACE ); //render both sides of every triangle
-	glEnable( GL_DEPTH_TEST ); //check the occlusions using the Z buffer
-
-	// Create our camera
+	
 	camera = new Camera();
-	camera->lookAt(Vector3(0.f,1.f, 1.f),Vector3(0.f,0.f,0.f), Vector3(0.f,1.f,0.f)); //position the camera and point to 0,0,0
-	camera->setPerspective(70.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
+	camera->lookAt(Vector3(0.f, 1.f, 1.f), Vector3(0.f, 0.f, 0.f), Vector3(0.f, 1.f, 0.f)); //position the camera and point to 0,0,0
+	camera->setPerspective(70.f, window_width / (float)window_height, 0.1f, 10000.f); //set the projection, we want to be perspective
+	stages[eStage::STAGE_MENU] = new MenuStage();
 
-	// Load one texture using the Texture Manager
-	texture = Texture::Get("data/textures/texture.tga");
+	stages[eStage::STAGE_GAMEDAY] = new GameDayStage();
 
-	// Example of loading Mesh from Mesh Manager
-	mesh = Mesh::Get("data/meshes/box.ASE");
+	stages[eStage::STAGE_GAMENIGHT] = new GameNightStage();
+	stages[eStage::STAGE_GAMEDAY]->Init();
+	stages[eStage::STAGE_MENU]->Init();
+	stages[eStage::STAGE_GAMENIGHT]->Init();
+	mouse_glocked = false;
+	SDL_ShowCursor(!mouse_glocked);
 
-	// Example of shader loading using the shaders manager
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-	root = new Entity();
-	SceneParser parser;
-	parser.parse("data/myscene.scene", root);
-	Texture* cubetexture = new Texture();
-	{
-		cubetexture->loadCubemap("landscape", { "data/shaders/skybox/px.png","data/shaders/skybox/nx.png","data/shaders/skybox/ny.png","data/shaders/skybox/py.png","data/shaders/skybox/pz.png","data/shaders/skybox/nz.png" });
-	}
-	Material cubeMat;
-	cubeMat.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/boxtexture.fs");
-	cubeMat.diffuse = cubetexture;
-	skybox = new EntityMesh(Mesh::Get("data/meshes/box.ASE"), cubeMat);
-	skybox->culling = false;
-	// Hide the cursor
-	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
+	
 }
 
 //what to do when the image has to be draw
@@ -81,22 +62,10 @@ void Game::render(void)
 	// Set the camera as default
 	camera->enable();
 	// Set flags
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+
 
 	// Create model matrix for cube
-	Matrix44 m;
-	m.rotate(angle*DEG2RAD, Vector3(0.0f, 1.0f, 0.0f));
-
-	if(shader)
-	{
-		// Enable the shader
-		
-		skybox->render(camera);
-
-		root->render(camera);
-	}
+	stages[currentStage]->Render(*camera);
 
 	// Draw the floor grid
 	drawGrid();
@@ -110,45 +79,15 @@ void Game::render(void)
 
 void Game::update(double seconds_elapsed)
 {
-	float speed = seconds_elapsed * mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
-	if (pulse.active) {
-		pulse.radius += seconds_elapsed;
-		if (pulse.radius > 10) {
-			pulse.radius = 0;
-			pulse.active = false;
-		}
-	}
-	// Example
-	angle += (float)seconds_elapsed * 10.0f;
+	stages[currentStage]->mouse_locked = mouse_glocked;
+	stages[currentStage]->Update(seconds_elapsed, *camera);
 
-	// Mouse input to rotate the cam
-	if (Input::isMousePressed(SDL_BUTTON_LEFT) || mouse_locked) //is left button pressed?
-	{
-		camera->rotate(Input::mouse_delta.x * 0.005f, Vector3(0.0f,-1.0f,0.0f));
-		camera->rotate(Input::mouse_delta.y * 0.005f, camera->getLocalVector( Vector3(-1.0f,0.0f,0.0f)));
-	}
-
-	// Async input to move the camera around
-	if (Input::isKeyPressed(SDL_SCANCODE_LSHIFT) ) speed *= 10; //move faster with left shift
-	if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP)) camera->move(Vector3(0.0f, 0.0f, 1.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::isKeyPressed(SDL_SCANCODE_DOWN)) camera->move(Vector3(0.0f, 0.0f,-1.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::isKeyPressed(SDL_SCANCODE_LEFT)) camera->move(Vector3(1.0f, 0.0f, 0.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT)) camera->move(Vector3(-1.0f,0.0f, 0.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_SPACE)){
-		pulse.active=true;
-
-		pulse.center = camera->eye;
-	}
 }
 
 //Keyboard event handler (sync input)
 void Game::onKeyDown( SDL_KeyboardEvent event )
 {
-	switch(event.keysym.sym)
-	{
-		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
-		case SDLK_F1: Shader::ReloadAll(); break; 
-	}
+	stages[currentStage]->onKeyDown(event);
 }
 
 void Game::onKeyUp(SDL_KeyboardEvent event)
@@ -160,10 +99,17 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 {
 	if (event.button == SDL_BUTTON_MIDDLE) //middle mouse
 	{
-		mouse_locked = !mouse_locked;
-		SDL_ShowCursor(!mouse_locked);
-		SDL_SetRelativeMouseMode((SDL_bool)(mouse_locked));
+		mouse_glocked = !mouse_glocked;
+		SDL_ShowCursor(!mouse_glocked);
+		SDL_SetRelativeMouseMode((SDL_bool)(mouse_glocked));
 	}
+}
+void Game::setStage(eStage nextstage) {
+
+	stages[currentStage]->OnExit(stages[nextstage]);
+	stages[nextstage]->OnEnter(stages[currentStage]);
+
+	currentStage = nextstage;
 }
 
 void Game::onMouseButtonUp(SDL_MouseButtonEvent event)
@@ -173,7 +119,8 @@ void Game::onMouseButtonUp(SDL_MouseButtonEvent event)
 
 void Game::onMouseWheel(SDL_MouseWheelEvent event)
 {
-	mouse_speed *= event.y > 0 ? 1.1f : 0.9f;
+
+	stages[currentStage]->onMouseWheel(event);
 }
 
 void Game::onGamepadButtonDown(SDL_JoyButtonEvent event)
@@ -201,5 +148,5 @@ void Game::setMouseLocked(bool must_lock)
 
 	SDL_SetRelativeMouseMode((SDL_bool)must_lock);
 
-	mouse_locked = must_lock;
+	mouse_glocked = must_lock;
 }
