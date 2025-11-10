@@ -16,6 +16,7 @@
 
 #include "framework/entities/entity.h"
 #include "framework/scene_parser.h"
+#include "framework/world.h"
 enum eStage {
 	STAGE_MENU,
 	STAGE_GAMEDAY,
@@ -82,8 +83,7 @@ public:
 
     bool mouse_locked; //tells if the mouse is locked (not seen)
 
-
-    Entity* root = nullptr;
+    World world;
     void Init() override;
     void OnEnter(Stage* last_stage) override;
     void OnExit(Stage* last_stage) override;
@@ -106,7 +106,7 @@ public:
     bool mouse_locked; //tells if the mouse is locked (not seen)
 
 
-    Entity* root = nullptr;
+    World world;
     void Init() override;
     void OnEnter(Stage* last_stage) override;
     void OnExit(Stage* last_stage) override;

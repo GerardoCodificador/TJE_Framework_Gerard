@@ -16,7 +16,7 @@ float mouse_speed = 1.0f;
 EntityMesh* skybox = nullptr;
 float timer = 10;
 float inittime = 10;
-
+bool stagechange = false;
 void GameDayStage::Init() {
 	
 	font.loadTGA("data/bitmap-font-black.tga"); //load bitmap-font image
@@ -24,26 +24,7 @@ void GameDayStage::Init() {
 	// Create our camera
 
 
-	// Load one texture using the Texture Manager
-	texture = Texture::Get("data/textures/texture.tga");
-
-	// Example of loading Mesh from Mesh Manager
-	mesh = Mesh::Get("data/meshes/box.ASE");
-
-	// Example of shader loading using the shaders manager
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-	root = new Entity();
-	SceneParser parser;
-	parser.parse("data/myscene.scene", root);
-	Texture* cubetexture = new Texture();
-	{
-		cubetexture->loadCubemap("landscape", { "data/shaders/skybox/px.png","data/shaders/skybox/nx.png","data/shaders/skybox/ny.png","data/shaders/skybox/py.png","data/shaders/skybox/pz.png","data/shaders/skybox/nz.png" });
-	}
-	Material cubeMat;
-	cubeMat.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/boxtexture.fs");
-	cubeMat.diffuse = cubetexture;
-	skybox = new EntityMesh(Mesh::Get("data/meshes/box.ASE"), cubeMat);
-	skybox->culling = false;
+	world.Init("data/myscene.scene");
 	mouse_locked = false;
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 	// OpenGL flags
@@ -63,18 +44,13 @@ void GameDayStage::OnExit(Stage* last_stage) {
 
 
 void GameDayStage::Update(float seconds_elapsed,Camera& camera) {
-	timer -= seconds_elapsed;
+	world.Update(seconds_elapsed, camera);
+	if(stagechange)timer -= seconds_elapsed;
 	if (timer <= 0) {
 		Game::instance->setStage(eStage::STAGE_GAMENIGHT);
 	}
 	float speed = seconds_elapsed * mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
-	if (pulse.active) {
-		pulse.radius += seconds_elapsed;
-		if (pulse.radius > 10) {
-			pulse.radius = 0;
-			pulse.active = false;
-		}
-	}
+
 	// Example
 	angle += (float)seconds_elapsed * 10.0f;
 
@@ -87,12 +63,9 @@ void GameDayStage::Update(float seconds_elapsed,Camera& camera) {
 
 	// Async input to move the camera around
 	if (Input::isKeyPressed(SDL_SCANCODE_LSHIFT)) speed *= 10; //move faster with left shift
-	if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP)) camera.move(Vector3(0.0f, 0.0f, 1.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::isKeyPressed(SDL_SCANCODE_DOWN)) camera.move(Vector3(0.0f, 0.0f, -1.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::isKeyPressed(SDL_SCANCODE_LEFT)) camera.move(Vector3(1.0f, 0.0f, 0.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT)) camera.move(Vector3(-1.0f, 0.0f, 0.0f) * speed);
+	
 	if (Input::isKeyPressed(SDL_SCANCODE_SPACE)) {
-		pulse.active = true;
+		pulse.active = !pulse.active;
 
 		pulse.center = camera.eye;
 	}
@@ -100,33 +73,27 @@ void GameDayStage::Update(float seconds_elapsed,Camera& camera) {
 }
 bool show_map=false;
 void GameDayStage::Render(Camera& camera) {
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	if (shader)
-	{
-		// Enable the shader
-
-		skybox->render(&camera);
-
-		root->render(&camera);
-	}
+	world.Render(camera);
 	drawText(2, 20, std::to_string(timer), Vector3(1, 1, 1), 2);
 	//render game stage
 }
 
 bool GameDayStage::onKeyDown(SDL_KeyboardEvent event) {
-
+	world.onKeyDown(event);
 	switch (event.keysym.sym)
 	{
 	case SDLK_ESCAPE: Game::instance->setStage(eStage::STAGE_MENU); break; //ESC key, kill the app
 	case SDLK_F1: Shader::ReloadAll(); break;
+	case SDLK_SPACE:
+		pulse.active = !pulse.active;
+		break;
+	case SDLK_e: stagechange = !stagechange; break;
 	}
 	return true;
 }
 
 bool GameDayStage::onMouseWheel(SDL_MouseWheelEvent event) {
-
+	world.onMouseWheel(event);
 	mouse_speed *= event.y > 0 ? 1.1f : 0.9f;
 	return true;
 }
@@ -139,26 +106,8 @@ void GameNightStage::Init() {
 	// Create our camera
 	
 
-	// Load one texture using the Texture Manager
-	texture = Texture::Get("data/textures/texture.tga");
-
-	// Example of loading Mesh from Mesh Manager
-	mesh = Mesh::Get("data/meshes/box.ASE");
-
-	// Example of shader loading using the shaders manager
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-	root = new Entity();
-	SceneParser parser;
-	parser.parse("data/mynightscene.scene", root);
-	Texture* cubetexture = new Texture();
-	{
-		cubetexture->loadCubemap("landscape", { "data/shaders/skybox/px.png","data/shaders/skybox/nx.png","data/shaders/skybox/ny.png","data/shaders/skybox/py.png","data/shaders/skybox/pz.png","data/shaders/skybox/nz.png" });
-	}
-	Material cubeMat;
-	cubeMat.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/boxtexture.fs");
-	cubeMat.diffuse = cubetexture;
-	skybox = new EntityMesh(Mesh::Get("data/meshes/box.ASE"), cubeMat);
-	skybox->culling = false;
+	world.Init("data/sceneNight.scene");
+	
 	mouse_locked = false;
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 	// OpenGL flags
@@ -176,18 +125,13 @@ void GameNightStage::OnExit(Stage* last_stage) {
 }
 void GameNightStage::Update(float deltaTime,Camera& camera) {
 	//update menu stage
-	timer -= deltaTime;
+	world.Update(deltaTime, camera);
+	if (stagechange)timer -= deltaTime;
 	if (timer <= 0) {
 		Game::instance->setStage(eStage::STAGE_GAMEDAY);
 	}
 	float speed = deltaTime * mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
-	if (pulse.active) {
-		pulse.radius += deltaTime;
-		if (pulse.radius > 10) {
-			pulse.radius = 0;
-			pulse.active = false;
-		}
-	}
+
 	// Example
 	angle += (float)deltaTime * 10.0f;
 
@@ -200,41 +144,28 @@ void GameNightStage::Update(float deltaTime,Camera& camera) {
 
 	// Async input to move the camera around
 	if (Input::isKeyPressed(SDL_SCANCODE_LSHIFT)) speed *= 10; //move faster with left shift
-	if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP)) camera.move(Vector3(0.0f, 0.0f, 1.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::isKeyPressed(SDL_SCANCODE_DOWN)) camera.move(Vector3(0.0f, 0.0f, -1.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::isKeyPressed(SDL_SCANCODE_LEFT)) camera.move(Vector3(1.0f, 0.0f, 0.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT)) camera.move(Vector3(-1.0f, 0.0f, 0.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_SPACE)) {
-		pulse.active = true;
 
-		pulse.center = camera.eye;
-	}
 }
 void GameNightStage::Render(Camera& camera) {
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	if (shader)
-	{
-		// Enable the shader
-
-		skybox->render(&camera);
-
-		root->render(&camera);
-	}
-
+	world.Render(camera);
 	drawText(2, 20, std::to_string(timer), Vector3(1, 1, 1), 2);
 }
 bool GameNightStage::onKeyDown(SDL_KeyboardEvent event) {
+	world.onKeyDown(event);
 	switch (event.keysym.sym)
 	{
 	case SDLK_ESCAPE: Game::instance->setStage(eStage::STAGE_MENU); break; //ESC key, kill the app
 	case SDLK_F1: Shader::ReloadAll(); break;
+	case SDLK_SPACE:
+		pulse.active = !pulse.active;
+		break;
+	case SDLK_e: stagechange = !stagechange; break;
 	}
+	
 	return true;
 }
 bool GameNightStage::onMouseWheel(SDL_MouseWheelEvent event) {
-
+	world.onMouseWheel(event);
 	mouse_speed *= event.y > 0 ? 1.1f : 0.9f;
 	return true;
 }

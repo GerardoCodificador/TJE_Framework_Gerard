@@ -57,11 +57,12 @@ public:
 	Texture* texture = nullptr;
 	bool isInstanced = false;
 	bool culling = true;
+	bool canrender = true;
 	// Check your framework material class!
 	Material* material = nullptr;
 	std::vector<Matrix44> models; // For instanced rendering
 
 	// Methods overwritten from base class
-	void render(Camera* camera);
-	void update(float elapsed_time);
+	virtual void render(Camera* camera);
+	virtual void update(float elapsed_time);
 };

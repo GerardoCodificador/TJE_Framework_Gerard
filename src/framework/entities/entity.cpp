@@ -73,7 +73,7 @@ std::vector<Matrix44> EntityMesh::getArrayofGlobalMatrix() {
 	return models;
 }
 void EntityMesh::render(Camera* camera) {
-
+	if (!canrender)return;
 	if(!mesh){
 		Entity::render(camera);
 		return;
@@ -129,7 +129,7 @@ void EntityMesh::render(Camera* camera) {
 	if (isInstanced) {
 
 		if (!material->shader) {
-			material->shader = Shader::Get("data/shaders/instanced.vs", "data/shaders/texture.fs");
+			material->shader = Shader::Get("data/shaders/instanced.vs", "data/shaders/pulse.fs");
 		}
 		// Set OpenGL flags
 		Shader* shader = material->shader;
@@ -141,6 +141,11 @@ void EntityMesh::render(Camera* camera) {
 		shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 
 		shader->setUniform("u_color", material->color);
+		shader->setUniform("u_pulse_color", pulse.color);
+		shader->setUniform("u_pulse_width", pulse.width);
+		shader->setUniform3("u_pulse_center", pulse.center);
+		shader->setUniform("u_pulse_radius", pulse.radius);
+		shader->setUniform("u_pulse_active", pulse.active);
 		if (material->diffuse)
 			shader->setUniform("u_texture", material->diffuse);
 		mesh->renderInstanced(GL_TRIANGLES, MatstoRender.data(), MatstoRender.size());
@@ -148,7 +153,7 @@ void EntityMesh::render(Camera* camera) {
 	}
 	else{
 		if(!material->shader){
-			material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+			material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/pulse.fs");
 		}
 		Shader* shader = material->shader;
 		// Set OpenGL flags
