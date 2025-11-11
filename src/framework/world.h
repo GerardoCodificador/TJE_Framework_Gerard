@@ -17,6 +17,15 @@
 #include "framework/entities/entity.h"
 #include "framework/scene_parser.h"
 #include "framework/entities/player.h"
+struct MapArea
+{
+    BoundingBox limits;
+    std::vector<Entity*> entities;
+};
+
+
+
+
 class Player;
 class World {
 public:

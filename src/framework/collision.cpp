@@ -1,5 +1,5 @@
 #include "collision.h"
-#include "framework/entities/entity_collider.h"
+#include "framework/entities/entityCollider.h"
 #include "graphics/mesh.h"
 #include <assert.h>
 
