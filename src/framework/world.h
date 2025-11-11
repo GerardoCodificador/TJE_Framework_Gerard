@@ -1,8 +1,5 @@
 
 #pragma once
-
-#ifndef WORLD_H
-#define WORLD_H
 #include "framework/includes.h"
 #include "framework/camera.h"
 #include "framework/utils.h"
@@ -17,6 +14,12 @@
 #include "framework/entities/entity.h"
 #include "framework/scene_parser.h"
 #include "framework/entities/player.h"
+
+#ifndef WORLD_H
+#define WORLD_H
+
+
+
 struct MapArea
 {
     BoundingBox limits;
@@ -29,9 +32,12 @@ struct MapArea
 class Player;
 class World {
 public:
+    static World* DayMap;
+    static World* NightMap;
 	Entity* root;
     EntityMesh* skybox;
     Player* player;
+    std::vector<MapArea>Areas;
 	void Init(const char* rootname);
 	void Update(float deltaTime, Camera& camera);
 	void Render(Camera& camera);
@@ -45,4 +51,5 @@ public:
     virtual bool onGamepadButtonUp(SDL_JoyButtonEvent event) { return false; }
     virtual bool onResize(int width, int height) { return false; }*/
 };
+
 #endif

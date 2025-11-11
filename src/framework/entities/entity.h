@@ -8,7 +8,6 @@
 #include "graphics/texture.h"
 
 class Camera;
-
 class Entity {
 
 public:
@@ -38,7 +37,6 @@ public:
 	float distance(Entity* e);
 };
 
-
 class EntityMesh : public Entity {
 
 public:
@@ -53,7 +51,6 @@ public:
 	// Attributes of the derived class  
 	std::vector<Matrix44> getArrayofGlobalMatrix();
 	Mesh* mesh = nullptr;
-
 	Texture* texture = nullptr;
 	bool isInstanced = false;
 	bool culling = true;

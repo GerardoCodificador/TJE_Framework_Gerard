@@ -9,12 +9,14 @@
 #include "framework/utils.h"
 #include "framework/pulse.h"
 #include "framework/stage.h"
+enum eStage;
 
 class Game
 {
 public:
 	static Game* instance;
 
+	eStage currentStage;
 	//window
 	SDL_Window* window;
 	int window_width;

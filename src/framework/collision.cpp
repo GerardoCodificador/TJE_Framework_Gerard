@@ -86,7 +86,7 @@ bool Collision::TestEntityRay(Entity* e, const Vector3& origin, const Vector3& d
 		for (const Matrix44& model : ec->models)
 		{
 			collided |= TestEntityRayWithModel(ec, model, origin, direction, collision_data, max_ray_dist);
-				
+
 			if (collided && !closest) {
 				return true;
 			}
@@ -96,8 +96,8 @@ bool Collision::TestEntityRay(Entity* e, const Vector3& origin, const Vector3& d
 	return collided;
 }
 
-bool Collision::TestSceneRay(const std::vector<Entity*>& entities, const Vector3& origin, const Vector3& direction, sCollisionData& collision_data, 
-													int layer, bool closest, float max_ray_dist)
+bool Collision::TestSceneRay(const std::vector<Entity*>& entities, const Vector3& origin, const Vector3& direction, sCollisionData& collision_data,
+	int layer, bool closest, float max_ray_dist)
 {
 	bool collided = false;
 

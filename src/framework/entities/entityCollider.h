@@ -1,3 +1,6 @@
+
+#ifndef ENTITY_COLLIDER_H
+#define ENTITY_COLLIDER_H
 #pragma once
 
 #include "framework/includes.h"
@@ -9,22 +12,21 @@
 #include "framework/entities/entity.h"
 #include "framework/world.h"
 #include "framework/input.h"
-enum {
-	NONE = 0,
-	FLOOR = 1 << 0,
-	WALL = 1 << 1,
-	PLAYER = 1 << 2,
-	ENEMY = 1 << 3,
-	// Both WALL and FLOOR are considered SCENARIO
-	// using OR operator
-	SCENARIO = WALL | FLOOR,
-	ALL = 0xFF
-};
+#include "framework/collision.h"
 
 
 class EntityCollider : public EntityMesh {
-	bool is_dynamic = false;
+	
 public:
-	int layer = NONE;
+	EntityCollider() {}; 			// Constructor
 
+	EntityCollider(Mesh* m, Material mat) {
+		mesh = m;
+		material = new Material(mat);
+	};
+	eCollisionFilter layer = NONE;
+	bool is_dynamic = false;
+	void render(Camera* camera){}
+	void update(float elapsed_time);
 };
+#endif 

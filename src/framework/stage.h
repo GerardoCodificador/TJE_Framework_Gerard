@@ -83,7 +83,6 @@ public:
 
     bool mouse_locked; //tells if the mouse is locked (not seen)
 
-    World world;
     void Init() override;
     void OnEnter(Stage* last_stage) override;
     void OnExit(Stage* last_stage) override;
@@ -106,7 +105,6 @@ public:
     bool mouse_locked; //tells if the mouse is locked (not seen)
 
 
-    World world;
     void Init() override;
     void OnEnter(Stage* last_stage) override;
     void OnExit(Stage* last_stage) override;

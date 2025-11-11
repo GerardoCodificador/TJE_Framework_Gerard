@@ -1,5 +1,6 @@
 #include "framework/world.h"
-
+World* World::DayMap = nullptr;
+World* World::NightMap = nullptr;
 void World::Init(const char* rootname) {
 	SceneParser parser;
 
@@ -26,6 +27,9 @@ void World::Init(const char* rootname) {
 	player->model = model;
 	player->canrender = false;
 	root->addChild(player);
+	MapArea area;
+	area.entities = root->children;
+	Areas.push_back(area);
 }
 void World::Update(float deltaTime, Camera& camera) {
 	player->update(deltaTime, camera);

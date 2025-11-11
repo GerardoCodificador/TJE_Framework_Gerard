@@ -22,9 +22,8 @@ void GameDayStage::Init() {
 	font.loadTGA("data/bitmap-font-black.tga"); //load bitmap-font image
 	minifont.loadTGA("data/mini-font-black-4x6.tga"); //load bitmap-font image
 	// Create our camera
-
-
-	world.Init("data/myscene.scene");
+	World::DayMap = new World();
+	World::DayMap->Init("data / myscene.scene");
 	mouse_locked = false;
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 	// OpenGL flags
@@ -35,6 +34,7 @@ void GameDayStage::Init() {
 }
 void GameDayStage::OnEnter(Stage* last_stage) {
 	//init game stage
+	
 	timer = inittime;
 }
 void GameDayStage::OnExit(Stage* last_stage) {
@@ -44,7 +44,7 @@ void GameDayStage::OnExit(Stage* last_stage) {
 
 
 void GameDayStage::Update(float seconds_elapsed,Camera& camera) {
-	world.Update(seconds_elapsed, camera);
+	World::DayMap->Update(seconds_elapsed, camera);
 	if(stagechange)timer -= seconds_elapsed;
 	if (timer <= 0) {
 		Game::instance->setStage(eStage::STAGE_GAMENIGHT);
@@ -73,13 +73,13 @@ void GameDayStage::Update(float seconds_elapsed,Camera& camera) {
 }
 bool show_map=false;
 void GameDayStage::Render(Camera& camera) {
-	world.Render(camera);
+	World::DayMap->Render(camera);
 	drawText(2, 20, std::to_string(timer), Vector3(1, 1, 1), 2);
 	//render game stage
 }
 
 bool GameDayStage::onKeyDown(SDL_KeyboardEvent event) {
-	world.onKeyDown(event);
+	World::DayMap->onKeyDown(event);
 	switch (event.keysym.sym)
 	{
 	case SDLK_ESCAPE: Game::instance->setStage(eStage::STAGE_MENU); break; //ESC key, kill the app
@@ -93,7 +93,7 @@ bool GameDayStage::onKeyDown(SDL_KeyboardEvent event) {
 }
 
 bool GameDayStage::onMouseWheel(SDL_MouseWheelEvent event) {
-	world.onMouseWheel(event);
+	World::DayMap->onMouseWheel(event);
 	mouse_speed *= event.y > 0 ? 1.1f : 0.9f;
 	return true;
 }
@@ -105,8 +105,8 @@ void GameNightStage::Init() {
 	minifont.loadTGA("data/mini-font-black-4x6.tga"); //load bitmap-font image
 	// Create our camera
 	
-
-	world.Init("data/sceneNight.scene");
+	World::NightMap = new World();
+	World::NightMap->Init("data/sceneNight.scene");
 	
 	mouse_locked = false;
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
@@ -125,7 +125,7 @@ void GameNightStage::OnExit(Stage* last_stage) {
 }
 void GameNightStage::Update(float deltaTime,Camera& camera) {
 	//update menu stage
-	world.Update(deltaTime, camera);
+	World::NightMap->Update(deltaTime, camera);
 	if (stagechange)timer -= deltaTime;
 	if (timer <= 0) {
 		Game::instance->setStage(eStage::STAGE_GAMEDAY);
@@ -147,11 +147,11 @@ void GameNightStage::Update(float deltaTime,Camera& camera) {
 
 }
 void GameNightStage::Render(Camera& camera) {
-	world.Render(camera);
+	World::NightMap->Render(camera);
 	drawText(2, 20, std::to_string(timer), Vector3(1, 1, 1), 2);
 }
 bool GameNightStage::onKeyDown(SDL_KeyboardEvent event) {
-	world.onKeyDown(event);
+	World::NightMap->onKeyDown(event);
 	switch (event.keysym.sym)
 	{
 	case SDLK_ESCAPE: Game::instance->setStage(eStage::STAGE_MENU); break; //ESC key, kill the app
@@ -165,7 +165,7 @@ bool GameNightStage::onKeyDown(SDL_KeyboardEvent event) {
 	return true;
 }
 bool GameNightStage::onMouseWheel(SDL_MouseWheelEvent event) {
-	world.onMouseWheel(event);
+	World::NightMap->onMouseWheel(event);
 	mouse_speed *= event.y > 0 ? 1.1f : 0.9f;
 	return true;
 }
