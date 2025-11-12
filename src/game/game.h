@@ -29,6 +29,7 @@ public:
 	int fps;
 	bool must_exit;
 
+	bool mouse_glocked;
 	//some vars
 	Camera* camera; //our global camera
 	

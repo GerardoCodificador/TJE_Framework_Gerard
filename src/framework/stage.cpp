@@ -88,6 +88,8 @@ bool GameDayStage::onKeyDown(SDL_KeyboardEvent event) {
 		pulse.active = !pulse.active;
 		break;
 	case SDLK_e: stagechange = !stagechange; break;
+	//case SDLK_LSHIFT:Game::instance->mouse_glocked = !Game::instance->mouse_glocked;
+		//break;
 	}
 	return true;
 }

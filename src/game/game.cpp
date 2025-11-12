@@ -15,7 +15,6 @@
 //some globals
 
 float mouse_gspeed = 1.0f;
-bool mouse_glocked;
 
 std::map<eStage, Stage*> stages;
 Game* Game::instance = NULL;

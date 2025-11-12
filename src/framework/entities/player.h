@@ -13,15 +13,13 @@
 #include "framework/input.h"
 #include "game/game.h"
 class EntityMesh;
+class EntityCollider;
 class Player :public EntityMesh {
 public:
 	Player() {};
-	Player(Mesh* m, Material mat) {
-		mesh = m;
-		material = new Material(mat);
-
-
-	};
+	Player(Mesh* m, Material mat);
+		
+	EntityCollider* collider;
 	float yaw = 0.0;
 	float pitch = 0.0;
 	float walk_speed = 1.0f;
@@ -29,4 +27,5 @@ public:
 	float time = 0.0f;
 	~Player(){}
 	void update(float elapsed_time,Camera& camera);
+	void render(Camera* camera);
 };
