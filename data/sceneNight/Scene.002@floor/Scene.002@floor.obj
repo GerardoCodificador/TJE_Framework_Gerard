@@ -1,6 +1,6 @@
 # Blender 4.5.4 LTS
 # www.blender.org
-mtllib Scene.002.mtl
+mtllib Scene.002@floor.mtl
 o road-dirt-tile.255
 v 25.000000 -25.000000 -5.000000
 v 25.000000 25.000000 -5.000000

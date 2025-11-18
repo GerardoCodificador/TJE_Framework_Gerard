@@ -1,6 +1,6 @@
 # Blender 4.5.4 LTS
 # www.blender.org
-mtllib Scene.mtl
+mtllib Scene@wall.mtl
 o fence
 v 49.999996 -4.200000 -58.012188
 v 49.999996 4.200000 -58.012188

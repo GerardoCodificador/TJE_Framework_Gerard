@@ -18,7 +18,7 @@ uniform float u_pulse_width;
 uniform vec3 u_pulse_center;
 uniform float u_pulse_radius;
 uniform int u_pulse_active;
-
+uniform int u_is_texture;
 varying vec2 v_uv;
 uniform sampler2D u_texture;
 varying vec3 v_world_position;
@@ -31,6 +31,7 @@ void main()
 	float check ;
 	float dist;
 	if(u_pulse_active==1){
+
 		vec3 adjusted_position = world_position-u_pulse_center;
 		dist = sdSphere(adjusted_position, u_pulse_radius);
 		
@@ -39,12 +40,29 @@ void main()
 		mix_ratio = 1.0 * check - percentage;
 		mix_ratio = clamp(mix_ratio, 0.0, 1.0);
 	}
-	vec4 final_color= u_color * texture2D( u_texture, uv );
+	vec4 final_color= u_color;
+	 if(u_is_texture==0){
+		final_color = texture(u_texture, uv) * u_color;
+	}
 	if(u_pulse_active==1){
-		if(dist<0.0)
-				gl_FragColor=mix(final_color,vec4(u_pulse_color,1.0),mix_ratio);
-			
-		else gl_FragColor=vec4(0.0);
+		    // Entorno muy oscuro
+    vec4 dark_color = final_color * 0.05;
+ 	float light_strength = clamp((-dist) * 0.5, 0.0, 1.0);
+    light_strength = smoothstep(0.0, 1.0, light_strength);
+		if(dist<0.0){
+				  vec3 warm_tint = vec3(1.25, 1.10, 0.75);
+
+        // Color iluminado base
+        vec4 light_color = mix(final_color, vec4(u_pulse_color, 1.0), mix_ratio);
+
+        // Aplicar calidez
+        light_color.rgb *= warm_tint;
+
+        // Resultado final dentro de la luz
+        gl_FragColor = mix(dark_color, light_color, light_strength);
+
+		}
+		else gl_FragColor=dark_color;
 	}
 	else{
 		gl_FragColor=final_color;
