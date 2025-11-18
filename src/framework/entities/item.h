@@ -14,20 +14,15 @@
 #include "game/game.h"
 class EntityMesh;
 class EntityCollider;
-class Player :public EntityMesh {
+class Item :public EntityMesh {
 public:
-	Player() {};
-	Player(Mesh* m, Material mat);
+	Item() {};
+	Item(Mesh* m, Material mat);
 		
 	EntityCollider* collider;
-	float yaw = 0.0;
-	float pitch = 0.0;
-	float walk_speed = 0.50f;
-	float camera_speed = 0.3f;
-	Vector3 velocity;
-	Material LampMat;
+	std::vector<bool> active;
 	float time = 0.0f;
-	~Player(){}
+	~Item(){}
 	void update(float elapsed_time,Camera& camera);
 	void render(Camera* camera);
 };

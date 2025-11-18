@@ -7,6 +7,7 @@
 #include "framework/input.h"
 #include "framework/pulse.h"
 #include "game/game.h"
+
 float angle = 0;
 Mesh* mesh = NULL;
 Texture* texture = NULL;
@@ -34,7 +35,7 @@ void GameDayStage::Init() {
 }
 void GameDayStage::OnEnter(Stage* last_stage) {
 	//init game stage
-	
+	Game::instance->setMouseLocked(true);
 	timer = inittime;
 }
 void GameDayStage::OnExit(Stage* last_stage) {
@@ -88,6 +89,8 @@ bool GameDayStage::onKeyDown(SDL_KeyboardEvent event) {
 		pulse.active = !pulse.active;
 		break;
 	case SDLK_e: stagechange = !stagechange; break;
+
+	case SDLK_LSHIFT:Game::instance->mouse_glocked = !Game::instance->mouse_glocked; Game::instance->setMouseLocked(Game::instance->mouse_glocked); break;
 	//case SDLK_LSHIFT:Game::instance->mouse_glocked = !Game::instance->mouse_glocked;
 		//break;
 	}
@@ -116,9 +119,35 @@ void GameNightStage::Init() {
 	glEnable(GL_CULL_FACE); //render both sides of every triangle
 	glEnable(GL_DEPTH_TEST); //check the occlusions using the Z buffer
 	// Hide the cursor
+	Mesh* mesh = Mesh::Get("data/Item/item.obj");
+	Material mat;
+	mat.color = Vector4(0.8, 0.6, 0.0, 1);
+	items = new Item(mesh, mat);
+	items->isInstanced = true;
+	Matrix44 matrix;
+	for (int i = 0; i < 1; i++) {
+		matrix.setTranslation(vec3(1, 0.1, 1));
+		matrix.scale(vec3(0.2));
+		items->models.push_back(matrix);
+		items->active.push_back(true);
+	}
+	World::NightMap->root->addChild(items);
+	Mesh* mesh2 = Mesh::Get("data/Rat/Cube.001/Cube.001.obj");
+	mat.color = Vector4(1, 1, 1, 1);
+	mat.diffuse = Texture::Get("data/textures/rat.tga");
+	World::NightMap->player = new Player(mesh2, mat);
+	Matrix44 model;
+	model.setTranslation(0.0f, 0.0f, 0.0f);   // posición inicial
+	model.scale(0.1f, 0.1f, 0.1f);
+	World::NightMap->player->model = model;
+	World::NightMap->player->canrender = false;
+	World::NightMap->root->addChild(World::NightMap->player);
+	
 }
 void GameNightStage::OnEnter(Stage* last_stage) {
 	//init menu stage
+
+	Game::instance->setMouseLocked(true);
 	timer = inittime;
 }
 void GameNightStage::OnExit(Stage* last_stage) {
@@ -162,6 +191,7 @@ bool GameNightStage::onKeyDown(SDL_KeyboardEvent event) {
 		pulse.active = !pulse.active;
 		break;
 	case SDLK_e: stagechange = !stagechange; break;
+	case SDLK_LSHIFT:Game::instance->mouse_glocked = !Game::instance->mouse_glocked; Game::instance->setMouseLocked(Game::instance->mouse_glocked); break;
 	}
 	
 	return true;
@@ -182,6 +212,8 @@ void MenuStage::Init() {
 }
 void MenuStage::OnEnter(Stage* last_stage) {
 	//init menu stage
+
+	Game::instance->setMouseLocked(false);
 }
 void MenuStage::OnExit(Stage* last_stage) {
 

@@ -14,6 +14,7 @@
 #include "graphics/shader.h"
 #include "graphics/texture.h"
 
+#include "framework/entities/item.h"
 #include "framework/entities/entity.h"
 #include "framework/scene_parser.h"
 #include "framework/world.h"
@@ -22,6 +23,7 @@ enum eStage {
 	STAGE_GAMEDAY,
 	STAGE_GAMENIGHT
 };
+class Item;
 class Stage{
 
 public:
@@ -101,7 +103,7 @@ public:
 
     Image font;
     Image minifont;
-
+    Item* items;
     bool mouse_locked; //tells if the mouse is locked (not seen)
 
 

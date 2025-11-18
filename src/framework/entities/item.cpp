@@ -1,80 +1,41 @@
-#include "entity.h"
-#include "framework/camera.h"
-#include "framework/pulse.h"
-#include <algorithm>
+#include "framework/entities/item.h"
 
-void Entity::render(Camera* camera)
-{
-	for (int i = 0; i < children.size(); ++i) {
-		children[i]->render(camera);
+
+Item::Item(Mesh* m, Material mat) {
+	mesh = m;
+	material = new Material(mat);
+	collider = new EntityCollider(mesh, *material);
+	collider->layer = ITEM;
+
+
+	collider->mesh = Mesh::Get("data/meshes/sphere.obj");
+	collider->models = models;
+	collider->model.translate(0, 0.5, 0);
+	this->addChild(collider);
+};
+void Item::update(float deltatime,Camera& camera) {
+	Matrix44 position;
+	Matrix44 rotation;
+	rotation.setIdentity();
+	rotation.rotate(M_PI*0.5 * deltatime, vec3(0, 1, 0));
+
+	for (int i = 0; i < models.size(); i++) {
+		if (!active[i])continue;
+		vec3 center = models[i].getTranslation();
+
+		Matrix44 T;   T.setTranslation(center);
+		Matrix44 Ti;  Ti.setTranslation(-center);
+
+		models[i] = rotation *models[i];
 	}
+	
+	collider->models = models;
+	Entity::update(deltatime,camera);
+	
 }
-
-void Entity::update(float delta_time, Camera& camera)
-{
-	for (int i = 0; i < children.size(); ++i) {
-		children[i]->update(delta_time,camera);
-	}
-}
-
-void Entity::addChild(Entity* child)
-{
-	if (child->parent) {
-		std::cerr << "Child has already a parent, remove it first!" << std::endl;
-		return;
-	}
-
-	// Checks if it's already a child
-	auto it = std::find(children.begin(), children.end(), child);
-	if (it != children.end()) {
-		std::cerr << "Entity is already one of the children!" << std::endl;
-		return;
-	}
-
-	child->parent = this;
-	children.push_back(child);
-}
-
-void Entity::removeChild(Entity* child)
-{
-	// Checks if it's a child
-	auto it = std::find(children.begin(), children.end(), child);
-	if (it == children.end()) {
-		std::cerr << "Entity is not a child!!" << std::endl;
-		return;
-	}
-
-	children.erase(it);
-	child->parent = nullptr;
-}
-
-Matrix44 Entity::getGlobalMatrix()
-{
-	if (parent)
-		return model * parent->getGlobalMatrix();
-	return model;
-}
-
-float Entity::distance(Entity* e)
-{
-	return model.getTranslation().distance(e->model.getTranslation());
-}
-void EntityMesh::update(float elapsed_time, Camera& camera) {
-	// You can add custom update code here for EntityMesh
-	Entity::update(elapsed_time,camera); // Call base class update to update children
-}
-std::vector<Matrix44> EntityMesh::getArrayofGlobalMatrix() {
-	std::vector<Matrix44> output;
-	if (parent){
-		for(int i=0;i<models.size();i++)
-			output.push_back(models[i] * parent->getGlobalMatrix());
-		return output;
-	}
-	return models;
-}
-void EntityMesh::render(Camera* camera) {
+void Item::render(Camera* camera) {
 	if (!canrender)return;
-	if(!mesh){
+	if (!mesh) {
 		Entity::render(camera);
 		return;
 	}
@@ -86,7 +47,7 @@ void EntityMesh::render(Camera* camera) {
 		BoundingBox box;
 		bool skip = false;
 		for (int i = 0; i < models.size(); i++) {
-			box=transformBoundingBox(globalMats[i], mesh->box);
+			box = transformBoundingBox(globalMats[i], mesh->box);
 			if (camera->eye.distance(box.center) > distance + box.halfsize.length()) {
 				skip = true;
 			}
@@ -95,6 +56,7 @@ void EntityMesh::render(Camera* camera) {
 			if (camera->testSphereInFrustum(box.center, box.halfsize.length()) != CLIP_INSIDE) {
 				skip = true;
 			}
+			if (!active[i])skip = true;
 			if (!skip) {
 				MatstoRender.push_back(models[i]);
 			}
@@ -106,7 +68,7 @@ void EntityMesh::render(Camera* camera) {
 			return;
 		}
 	}
-	else{
+	else {
 		const Matrix44& globalMat = getGlobalMatrix();
 		float distance = 10.0f;
 		BoundingBox box = transformBoundingBox(globalMat, mesh->box);
@@ -151,8 +113,8 @@ void EntityMesh::render(Camera* camera) {
 		mesh->renderInstanced(GL_TRIANGLES, MatstoRender.data(), MatstoRender.size());
 		shader->disable();
 	}
-	else{
-		if(!material->shader){
+	else {
+		if (!material->shader) {
 			material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/pulse.fs");
 		}
 		Shader* shader = material->shader;
@@ -161,18 +123,18 @@ void EntityMesh::render(Camera* camera) {
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		shader->enable();
-		
+
 
 		// Enable shader and pass uniforms 
 		shader->setUniform("u_model", model);
 		shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 		shader->setUniform("u_color", material->color);
 		shader->setUniform("u_pulse_color", pulse.color);
-		shader->setUniform("u_pulse_width",pulse.width);
+		shader->setUniform("u_pulse_width", pulse.width);
 		shader->setUniform3("u_pulse_center", pulse.center);
 		shader->setUniform("u_pulse_radius", pulse.radius);
 		shader->setUniform("u_pulse_active", pulse.active);
-		if(material->diffuse)shader->setTexture("u_texture", material->diffuse, 0);
+		if (material->diffuse)shader->setTexture("u_texture", material->diffuse, 0);
 
 
 		// Render the mesh using the active shader
@@ -181,7 +143,6 @@ void EntityMesh::render(Camera* camera) {
 		shader->disable();
 	}
 	// Disable shader after finishing rendering
-	
-	Entity::render(camera);
-};
 
+	Entity::render(camera);
+}

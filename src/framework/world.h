@@ -28,10 +28,16 @@ struct MapArea
 
 
 
-
 class Player;
 class World {
 public:
+    static bool isFloor(const Entity* e) {
+        return e->name.find("@floor") != std::string::npos;
+    }
+
+    static bool isWall(const Entity* e) {
+        return e->name.find("@wall") != std::string::npos;
+    }
     static World* DayMap;
     static World* NightMap;
 	Entity* root;

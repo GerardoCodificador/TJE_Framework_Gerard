@@ -1,6 +1,7 @@
 #include "framework/world.h"
 World* World::DayMap = nullptr;
 World* World::NightMap = nullptr;
+
 void World::Init(const char* rootname) {
 	SceneParser parser;
 
@@ -8,7 +9,7 @@ void World::Init(const char* rootname) {
 	parser.parse(rootname, root);
 	Texture* cubetexture = new Texture();
 	{
-		cubetexture->loadCubemap("landscape", { "data/shaders/skybox/px.png","data/shaders/skybox/nx.png","data/shaders/skybox/ny.png","data/shaders/skybox/py.png","data/shaders/skybox/pz.png","data/shaders/skybox/nz.png" });
+		cubetexture->loadCubemap("landscape", { "data/shaders/skybox/night/px.png","data/shaders/skybox/night/nx.png","data/shaders/skybox/night/ny.png","data/shaders/skybox/night/py.png","data/shaders/skybox/night/pz.png","data/shaders/skybox/night/nz.png" });
 	}
 	Material cubeMat;
 	cubeMat.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/boxtexture.fs");
@@ -16,23 +17,41 @@ void World::Init(const char* rootname) {
 	skybox = new EntityMesh(Mesh::Get("data/meshes/box.ASE"), cubeMat);
 	skybox->culling = false;
 	
-	Mesh* mesh = Mesh::Get("data/Rat/Cube.001/Cube.001.obj");
-	Material mat;
-	mat.color = Vector4(1, 1, 1, 1);
-	mat.diffuse = Texture::Get("data/textures/rat.tga");
-	player = new Player(mesh,mat);
-	Matrix44 model;
-	model.setTranslation(0.0f, 0.0f, 0.0f);   // posición inicial
-	model.scale(0.1f, 0.1f, 0.1f);
-	player->model = model;
-	player->canrender = false;
-	root->addChild(player);
+
+
+	EntityCollider* collider;
+	EntityMesh *entity;
+	for (int i = 0; i < root->children.size(); i++) {
+		entity = static_cast<EntityMesh*>(root->children[i]);
+		if (entity == nullptr) {
+			continue;
+		}
+		collider = new EntityCollider(entity->mesh, *entity->material);
+		collider->model = entity->model;
+		collider->models = entity->models;
+		collider->isInstanced = entity->isInstanced;
+		collider->layer = isFloor(entity) ? FLOOR : isWall(entity) ? WALL : NONE;
+		if (entity->mesh) {
+			if (!collider->isInstanced)collider->collider = transformBoundingBox(entity->model, entity->mesh->box);
+			if (collider->isInstanced) {
+				for (int i = 0; i < entity->models.size(); i++) {
+					collider->colliders.push_back(transformBoundingBox(entity->models[i], entity->mesh->box));
+				}
+			}
+		}
+		else {
+			collider->collider = BoundingBox(vec3(0),vec3(0));
+		}
+		
+		
+		root->children[i]->addChild(collider);
+	}
 	MapArea area;
 	area.entities = root->children;
 	Areas.push_back(area);
 }
 void World::Update(float deltaTime, Camera& camera) {
-	player->update(deltaTime, camera);
+	root->update(deltaTime,camera);
 }
 void World::Render(Camera& camera) {
 	glDisable(GL_BLEND);

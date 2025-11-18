@@ -67,7 +67,7 @@ void Game::render(void)
 	stages[currentStage]->Render(*camera);
 
 	// Draw the floor grid
-	drawGrid();
+	//drawGrid();
 
 	// Render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);

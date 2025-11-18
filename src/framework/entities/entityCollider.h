@@ -26,7 +26,10 @@ public:
 	};
 	eCollisionFilter layer = NONE;
 	bool is_dynamic = false;
+	bool is_collided=false;
+	BoundingBox collider;
+	std::vector<BoundingBox> colliders;
 	void render(Camera* camera){}
-	void update(float elapsed_time);
+	void update(float elapsed_time,Camera& camera);
 };
 #endif 
