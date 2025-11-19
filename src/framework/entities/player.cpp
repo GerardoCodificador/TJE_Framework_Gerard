@@ -115,6 +115,7 @@ void Player::update(float deltatime,Camera& camera) {
 				}
 
 				if (Collision::TestEntitySphere(entity->children[0], 0.2, objectcenter, collisions, ITEM) && dynamic_cast<Player*>(entity) == nullptr) {
+					
 					for(int j=0;j<entity->models.size();j++){
 
 						dirtoobj = (entity->models[j].getTranslation() - position);
@@ -122,6 +123,7 @@ void Player::update(float deltatime,Camera& camera) {
 							closest = j;
 						}
 					}
+					if (static_cast<Item*>(entity)->active[closest])point++;
 					static_cast<Item*>(entity)->active[closest] = false;
 				}
 			}

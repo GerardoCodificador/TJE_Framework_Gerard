@@ -179,7 +179,7 @@ void GameNightStage::Update(float deltaTime,Camera& camera) {
 }
 void GameNightStage::Render(Camera& camera) {
 	World::NightMap->Render(camera);
-	drawText(2, 20, std::to_string(timer), Vector3(1, 1, 1), 2);
+	drawText(2, 20, std::to_string(timer)+"       "+std::to_string(World::NightMap->player->point), Vector3(1, 1, 1), 2);
 }
 bool GameNightStage::onKeyDown(SDL_KeyboardEvent event) {
 	World::NightMap->onKeyDown(event);

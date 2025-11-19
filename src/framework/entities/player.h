@@ -20,6 +20,7 @@ public:
 	Player(Mesh* m, Material mat);
 		
 	EntityCollider* collider;
+	int point = 0;
 	float yaw = 0.0;
 	float pitch = 0.0;
 	float walk_speed = 0.50f;
