@@ -100,7 +100,7 @@ void Player::update(float deltatime,Camera& camera) {
 			// Check if collides with wall using sphere (radius = 1)
 			EntityMesh* entity;
 			vec3 dirtoobj;
-			Vector3 objectcenter = position + Vector3(0, 0.5f, 0);
+			Vector3 objectcenter = position+ Vector3(0,0.5,0);
 			int closest=0;
 			for (int i = 0; i < World::NightMap->root->children.size(); i++) {
 				collisions.clear();
@@ -165,6 +165,19 @@ void Player::render(Camera* camera) {
 	// Renderizamos el quad en espacio de pantalla
 	hudQuad->render(GL_TRIANGLES);
 
+	shader->disable();
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
+	Mesh* meshs = Mesh::Get("data/meshes/sphere.obj");
+	shader->enable();
+
+	Matrix44 m;
+	m.setTranslation(model.getTranslation() + vec3(0, 0.5f, 0));
+	m.scale(vec3(0.5f));
+	shader->setUniform("u_color", Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+	shader->setUniform("u_model", m);
+
+	meshs->render(GL_LINES);
 	shader->disable();
 	/*Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
 	Mesh * mesh = Mesh::Get("data/meshes/sphere.obj");

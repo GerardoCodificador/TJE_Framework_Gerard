@@ -11,7 +11,10 @@ Item::Item(Mesh* m, Material mat) {
 	collider->mesh = Mesh::Get("data/meshes/sphere.obj");
 	collider->models = models;
 	collider->model.translate(0, 0.5, 0);
+	collider->isInstanced = true;
 	this->addChild(collider);
+	isInstanced = true;
+
 };
 void Item::update(float deltatime,Camera& camera) {
 	Matrix44 position;

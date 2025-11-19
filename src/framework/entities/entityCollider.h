@@ -21,7 +21,7 @@ public:
 	EntityCollider() {}; 			// Constructor
 
 	EntityCollider(Mesh* m, Material mat) {
-		mesh = m;
+		mesh = Mesh::Get("data/meshes/box.ASE");
 		material = new Material(mat);
 	};
 	eCollisionFilter layer = NONE;
@@ -29,7 +29,7 @@ public:
 	bool is_collided=false;
 	BoundingBox collider;
 	std::vector<BoundingBox> colliders;
-	void render(Camera* camera){}
+	void render(Camera* camera);
 	void update(float elapsed_time,Camera& camera);
 };
 #endif 

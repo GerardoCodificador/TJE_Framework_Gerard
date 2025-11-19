@@ -125,12 +125,15 @@ void GameNightStage::Init() {
 	items = new Item(mesh, mat);
 	items->isInstanced = true;
 	Matrix44 matrix;
+	std::vector<BoundingBox> colliders;
 	for (int i = 0; i < 1; i++) {
 		matrix.setTranslation(vec3(1, 0.1, 1));
 		matrix.scale(vec3(0.2));
 		items->models.push_back(matrix);
 		items->active.push_back(true);
+		colliders.push_back(transformBoundingBox(matrix, mesh->box));
 	}
+	items->collider->colliders = colliders;
 	World::NightMap->root->addChild(items);
 	Mesh* mesh2 = Mesh::Get("data/Rat/Cube.001/Cube.001.obj");
 	mat.color = Vector4(1, 1, 1, 1);
