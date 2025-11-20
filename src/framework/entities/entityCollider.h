@@ -26,6 +26,7 @@ public:
 	};
 	eCollisionFilter layer = NONE;
 	bool is_dynamic = false;
+	bool is_initialized = false;
 	bool is_collided=false;
 	BoundingBox collider;
 	std::vector<BoundingBox> colliders;

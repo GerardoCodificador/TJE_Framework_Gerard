@@ -2,6 +2,8 @@
 int i_saved;
 float actualy;
 
+
+
 Player::Player(Mesh* m, Material mat) {
 	mesh = m;
 	material = new Material(mat);
@@ -81,18 +83,45 @@ void Player::update(float deltatime,Camera& camera) {
 	if(ismoving){
 		if (Game::instance->currentStage == eStage::STAGE_GAMEDAY) {
 
-			Vector3 character_center = mewModel.getTranslation() + Vector3(0, 2, 0);
-
 			// Check if collides with wall using sphere (radius = 1)
-			Entity* entity;
+			EntityMesh* entity;
 			vec3 dirtoobj;
+			Vector3 objectcenter = position;
+			int closest = 0;
 			for (int i = 0; i < World::DayMap->root->children.size(); i++) {
-				entity = World::DayMap->root->children[i];
-				if (Collision::TestEntitySphere(entity, 1.0, character_center, collisions, filter)) {
+				collisions.clear();
+				entity = static_cast<EntityMesh*>(World::DayMap->root->children[i]);
+
+				if (Collision::TestEntitySphere(entity->children[0], 50, objectcenter, collisions, WALL) && dynamic_cast<Player*>(entity) == nullptr) {
+					dirtoobj = (entity->children[0]->model.getTranslation() - position).normalize();
 					entercollision = true;
+					if ((dirtoobj.x / std::abs(dirtoobj.x) == dir.x / std::abs(dir.x) || (dir.x == 0 && dirtoobj.x == 0)) && (dirtoobj.y / std::abs(dirtoobj.y) == dir.y / std::abs(dir.y)) || (dir.y == 0 && dirtoobj.y == 0) && (dirtoobj.z / std::abs(dirtoobj.z) == dir.z / std::abs(dir.z)) || (dir.z == 0 && dirtoobj.z == 0)) {
+						entercollision = true;
+						i_saved = i;
+					}
 				}
-				
+
+				if (Collision::TestEntitySphere(entity->children[0], 1, objectcenter, collisions, ITEM) && dynamic_cast<Player*>(entity) == nullptr) {
+
+					for (int j = 0; j < entity->models.size(); j++) {
+
+						dirtoobj = (entity->models[j].getTranslation() - position);
+						if (dirtoobj.length() < (entity->models[closest].getTranslation() - position).length()) {
+							closest = j;
+						}
+					}
+					if (static_cast<Item*>(entity)->active[closest])point++;
+					static_cast<Item*>(entity)->active[closest] = false;
+				}
+				if (Collision::TestEntitySphere(entity->children[0], 1, objectcenter, collisions, TYPENPC) && dynamic_cast<Player*>(entity) == nullptr) {
+					if(point >0){
+						point--;
+						std::cout << "Que bueno" << std::endl;
+					}
+
+				}
 			}
+		
 
 		}	else if (Game::instance->currentStage == eStage::STAGE_GAMENIGHT) {
 
@@ -100,21 +129,22 @@ void Player::update(float deltatime,Camera& camera) {
 			// Check if collides with wall using sphere (radius = 1)
 			EntityMesh* entity;
 			vec3 dirtoobj;
-			Vector3 objectcenter = position+ Vector3(0,0.5,0);
+			Vector3 objectcenter = position;
 			int closest=0;
 			for (int i = 0; i < World::NightMap->root->children.size(); i++) {
 				collisions.clear();
 				entity = static_cast<EntityMesh*>( World::NightMap->root->children[i]);
 				
-				if (Collision::TestEntitySphere(entity->children[0], 2.0, objectcenter, collisions, WALL) && dynamic_cast<Player*>(entity) == nullptr) {
-				dirtoobj = ( entity->model.getTranslation() - position).normalize();
+				if (Collision::TestEntitySphere(entity->children[0], 50, objectcenter, collisions, WALL) && dynamic_cast<Player*>(entity) == nullptr) {
+				dirtoobj = ( entity->children[0]->model.getTranslation() - position).normalize();
+				entercollision = true;
 				if((dirtoobj.x/std::abs(dirtoobj.x)== dir.x / std::abs(dir.x)||(dir.x==0&&dirtoobj.x==0))&&( dirtoobj.y / std::abs(dirtoobj.y) == dir.y/ std::abs(dir.y)) || (dir.y == 0 && dirtoobj.y == 0) && (dirtoobj.z / std::abs(dirtoobj.z) == dir.z / std::abs(dir.z)) || (dir.z == 0 && dirtoobj.z == 0)){
 					entercollision = true;
 					i_saved = i;
 					}
 				}
 
-				if (Collision::TestEntitySphere(entity->children[0], 0.2, objectcenter, collisions, ITEM) && dynamic_cast<Player*>(entity) == nullptr) {
+				if (Collision::TestEntitySphere(entity->children[0], 1, objectcenter, collisions, ITEM) && dynamic_cast<Player*>(entity) == nullptr) {
 					
 					for(int j=0;j<entity->models.size();j++){
 
@@ -166,13 +196,17 @@ void Player::render(Camera* camera) {
 	hudQuad->render(GL_TRIANGLES);
 
 	shader->disable();
+
+	glDisable(GL_DEPTH_TEST);
+	if (!RENDERCOLISIONS) return;
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
 	Mesh* meshs = Mesh::Get("data/meshes/sphere.obj");
 	shader->enable();
 
 	Matrix44 m;
-	m.setTranslation(model.getTranslation() + vec3(0, 0.5f, 0));
-	m.scale(vec3(0.5f));
+	m.setIdentity();
+	m.translate(model.getTranslation());
+	m.scale(vec3(1));
 	shader->setUniform("u_color", Vector4(0.0f, 0.0f, 0.0f, 1.0f));
 	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 	shader->setUniform("u_model", m);

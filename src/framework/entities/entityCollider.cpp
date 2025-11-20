@@ -1,32 +1,41 @@
 #include "framework/entities/entityCollider.h"
+#include <iostream>
 
 void EntityCollider::update(float elapsed_time,Camera& camera) {
-	if (is_dynamic) {
+	if (!parent) return;
+	if(is_dynamic||!is_initialized){
+		EntityMesh* parentMesh = static_cast<EntityMesh*>(parent);
+		if (!parentMesh->mesh) return;
 		if (!isInstanced) {
-			collider = transformBoundingBox(parent->model, static_cast<EntityMesh*>( parent)->mesh->box);
+			BoundingBox worldBox = transformBoundingBox(getGlobalMatrix(), parentMesh->mesh->box);
+			collider = worldBox;
 		}
 		else {
 			colliders.clear();
-			for (int i = 0; i < models.size(); i++) {
-				colliders.push_back(transformBoundingBox(static_cast<EntityMesh*>(parent)->model, static_cast<EntityMesh*>(parent)-> mesh->box));
+			const std::vector<Matrix44> globalMats = getArrayofGlobalMatrix();
+			for (size_t i = 0; i < globalMats.size(); ++i) {
+				BoundingBox b = transformBoundingBox(globalMats[i], parentMesh->mesh->box);
+				colliders.push_back(b);
 			}
 		}
-	}
-	if (!isInstanced) {
-
-		model.setScale(collider.halfsize.x*2, collider.halfsize.z*2, collider.halfsize.y*2);
-		model.translate(collider.center+Vector3(0,1,0));
-	}
-	else {
-		for (int i = 0; i < models.size(); i++) {
-			models[i].setScale(colliders[i].halfsize.x * 2, colliders[i].halfsize.z * 2, colliders[i].halfsize.y * 2);
-			models[i].translate(colliders[i].center);
+		if (!isInstanced) {
+			model.setIdentity();
+			model.translate(collider.center);
+			model.scale(collider.halfsize.x * 2.0f, collider.halfsize.z * 2.0f, collider.halfsize.y * 2.0f);
 		}
+		else {
+			for (int i = 0; i < (int)models.size() && i < (int)colliders.size(); i++) {
+				models[i].setIdentity();
+				models[i].translate(colliders[i].center);
+				models[i].scale(colliders[i].halfsize.x * 2.0f, colliders[i].halfsize.z * 2.0f, colliders[i].halfsize.y * 2.0f);
+			}
+		}
+		is_initialized = true;
 	}
-	
-	Entity::update(elapsed_time,camera);
+	Entity::update(elapsed_time, camera);
 }
 void EntityCollider::render(Camera* camera) {
+	if (!RENDERCOLISIONS) return;
 	if (!canrender)return;
 	if (!mesh) {
 		Entity::render(camera);
@@ -79,13 +88,33 @@ void EntityCollider::render(Camera* camera) {
 
 	}
 
-
+	if(layer!=FLOOR){
 	if (isInstanced) {
+		if (!material->shader) {
+			material->shader = Shader::Get("data/shaders/instanced.vs", "data/shaders/flat.fs");
+		}
+		// Set OpenGL flags
+		Shader* shader = material->shader;
+		shader->enable();
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
 
+		shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+
+		shader->setUniform("u_color", material->color);
+		shader->setUniform("u_pulse_color", pulse.color);
+		shader->setUniform("u_pulse_width", pulse.width);
+		shader->setUniform3("u_pulse_center", pulse.center);
+		shader->setUniform("u_pulse_radius", pulse.radius);
+		shader->setUniform("u_pulse_active", pulse.active);
+		if (material->diffuse)
+			shader->setUniform("u_texture", material->diffuse);
+		mesh->renderInstanced(GL_TRIANGLES, MatstoRender.data(), MatstoRender.size());
+		shader->disable();
 		
 	}
 	else {
-		if (layer == WALL) {
 			if (!material->shader) {
 				material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
 			}
@@ -98,7 +127,8 @@ void EntityCollider::render(Camera* camera) {
 
 
 			// Enable shader and pass uniforms 
-			shader->setUniform("u_model", getGlobalMatrix());
+			shader->setUniform("u_model",model);
+			std::cout << model.getTranslation().x<< ","<<model.getTranslation().y << "," << model.getTranslation().z << "," << std::endl;
 			shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 			shader->setUniform("u_color", material->color);
 			shader->setUniform("u_pulse_color", pulse.color);

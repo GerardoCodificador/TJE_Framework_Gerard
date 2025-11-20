@@ -1,6 +1,6 @@
 
 #pragma once
-
+extern bool RENDERCOLISIONS;
 #ifndef STAGE_H
 #define STAGE_H
 #include "framework/includes.h"
@@ -16,8 +16,11 @@
 
 #include "framework/entities/item.h"
 #include "framework/entities/entity.h"
+
+#include "framework/entities/NPC.h"
 #include "framework/scene_parser.h"
 #include "framework/world.h"
+
 enum eStage {
 	STAGE_MENU,
 	STAGE_GAMEDAY,

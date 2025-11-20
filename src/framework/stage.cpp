@@ -7,12 +7,14 @@
 #include "framework/input.h"
 #include "framework/pulse.h"
 #include "game/game.h"
-
+#include "extra/bass.h"
+HSAMPLE hSample;	// Handler to store one sample	
+HCHANNEL hSampleChannel; // Handler to store one channel
 float angle = 0;
 Mesh* mesh = NULL;
 Texture* texture = NULL;
 Shader* shader = NULL;
-
+bool RENDERCOLISIONS = false;
 float mouse_speed = 1.0f;
 EntityMesh* skybox = nullptr;
 float timer = 10;
@@ -24,14 +26,29 @@ void GameDayStage::Init() {
 	minifont.loadTGA("data/mini-font-black-4x6.tga"); //load bitmap-font image
 	// Create our camera
 	World::DayMap = new World();
-	World::DayMap->Init("data / myscene.scene");
+	World::DayMap->Init("data/sceneDay.scene");
 	mouse_locked = false;
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 	// OpenGL flags
 	glEnable(GL_CULL_FACE); //render both sides of every triangle
 	glEnable(GL_DEPTH_TEST); //check the occlusions using the Z buffer
 	// Hide the cursor
-	
+	Texture* tex = Texture::Get("data/textures/personaje.tga");
+	NPC *npc = new NPC(tex, "Julia", vec3(1.5, 0.25, 1.5));
+
+	World::DayMap->root->addChild(npc);
+	Mesh* mesh2 = Mesh::Get("data/Rat/Cube.001/Cube.001.obj");
+	Material mat;
+	mat.color = Vector4(1, 1, 1, 1);
+	mat.diffuse = Texture::Get("data/textures/rat.tga");
+	World::DayMap->player = new Player(mesh2, mat);
+	Matrix44 model;
+	model.setTranslation(0.0f, 0.0f, 0.0f);   // posición inicial
+	model.scale(0.1f, 0.1f, 0.1f);
+	World::DayMap->player->model = model;
+	World::DayMap->player->canrender = false;
+	World::DayMap->root->addChild(World::DayMap->player);
+
 }
 void GameDayStage::OnEnter(Stage* last_stage) {
 	//init game stage
@@ -63,14 +80,12 @@ void GameDayStage::Update(float seconds_elapsed,Camera& camera) {
 	}
 
 	// Async input to move the camera around
-	if (Input::isKeyPressed(SDL_SCANCODE_LSHIFT)) speed *= 10; //move faster with left shift
+	if (Input::isKeyPressed(SDL_SCANCODE_LSHIFT)) World::DayMap->player->walk_speed *= 10; //move faster with left shift
 	
-	if (Input::isKeyPressed(SDL_SCANCODE_SPACE)) {
-		pulse.active = !pulse.active;
-
-		pulse.center = camera.eye;
-	}
+	
 	//update game stage
+	
+
 }
 bool show_map=false;
 void GameDayStage::Render(Camera& camera) {
@@ -90,7 +105,7 @@ bool GameDayStage::onKeyDown(SDL_KeyboardEvent event) {
 		break;
 	case SDLK_e: stagechange = !stagechange; break;
 
-	case SDLK_LSHIFT:Game::instance->mouse_glocked = !Game::instance->mouse_glocked; Game::instance->setMouseLocked(Game::instance->mouse_glocked); break;
+	case SDLK_RSHIFT:Game::instance->mouse_glocked = !Game::instance->mouse_glocked; Game::instance->setMouseLocked(Game::instance->mouse_glocked); break;
 	//case SDLK_LSHIFT:Game::instance->mouse_glocked = !Game::instance->mouse_glocked;
 		//break;
 	}
@@ -105,7 +120,21 @@ bool GameDayStage::onMouseWheel(SDL_MouseWheelEvent event) {
 int MenuOption = 0;
 void GameNightStage::Init() {
 	//init menu stage
+	if (BASS_Init(-1, 44100, 0, 0, NULL) == false) {
+		// Error with sound device
+	}
 
+	hSample = BASS_SampleLoad(
+		false,  			// From internal memory
+		"data/sounds/breathing.wav", 	// Filepath
+		0,				// Offset
+		0,				// Length
+		3,				// Max playbacks
+		BASS_SAMPLE_LOOP    				// Flags
+	);
+
+	hSampleChannel = BASS_SampleGetChannel(hSample, false);
+	
 	font.loadTGA("data/bitmap-font-black.tga"); //load bitmap-font image
 	minifont.loadTGA("data/mini-font-black-4x6.tga"); //load bitmap-font image
 	// Create our camera
@@ -149,6 +178,7 @@ void GameNightStage::Init() {
 }
 void GameNightStage::OnEnter(Stage* last_stage) {
 	//init menu stage
+	BASS_ChannelPlay(hSampleChannel, false);
 
 	Game::instance->setMouseLocked(true);
 	timer = inittime;
@@ -178,6 +208,7 @@ void GameNightStage::Update(float deltaTime,Camera& camera) {
 
 	// Async input to move the camera around
 	if (Input::isKeyPressed(SDL_SCANCODE_LSHIFT)) speed *= 10; //move faster with left shift
+	// Play channel
 
 }
 void GameNightStage::Render(Camera& camera) {
@@ -190,11 +221,12 @@ bool GameNightStage::onKeyDown(SDL_KeyboardEvent event) {
 	{
 	case SDLK_ESCAPE: Game::instance->setStage(eStage::STAGE_MENU); break; //ESC key, kill the app
 	case SDLK_F1: Shader::ReloadAll(); break;
+	case SDLK_F2: RENDERCOLISIONS=!RENDERCOLISIONS; break;
 	case SDLK_SPACE:
 		pulse.active = !pulse.active;
 		break;
 	case SDLK_e: stagechange = !stagechange; break;
-	case SDLK_LSHIFT:Game::instance->mouse_glocked = !Game::instance->mouse_glocked; Game::instance->setMouseLocked(Game::instance->mouse_glocked); break;
+	case SDLK_RSHIFT:Game::instance->mouse_glocked = !Game::instance->mouse_glocked; Game::instance->setMouseLocked(Game::instance->mouse_glocked); break;
 	}
 	
 	return true;
