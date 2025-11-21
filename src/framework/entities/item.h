@@ -25,4 +25,5 @@ public:
 	~Item(){}
 	void update(float elapsed_time,Camera& camera);
 	void render(Camera* camera);
+	void onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type);
 };

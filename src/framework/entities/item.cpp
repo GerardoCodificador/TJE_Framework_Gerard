@@ -16,6 +16,13 @@ Item::Item(Mesh* m, Material mat) {
 	isInstanced = true;
 
 };
+
+void Item::onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type) {
+	if (Type == PLAYER) {
+		int collided_i = static_cast<EntityCollider*>(children[0])->closest;
+		active[collided_i] = false;
+	}
+}
 void Item::update(float deltatime,Camera& camera) {
 	Matrix44 position;
 	Matrix44 rotation;

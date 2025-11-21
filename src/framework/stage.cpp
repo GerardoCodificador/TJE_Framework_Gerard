@@ -37,22 +37,14 @@ void GameDayStage::Init() {
 	NPC *npc = new NPC(tex, "Julia", vec3(1.5, 0.25, 1.5));
 
 	World::DayMap->root->addChild(npc);
-	Mesh* mesh2 = Mesh::Get("data/Rat/Cube.001/Cube.001.obj");
-	Material mat;
-	mat.color = Vector4(1, 1, 1, 1);
-	mat.diffuse = Texture::Get("data/textures/rat.tga");
-	World::DayMap->player = new Player(mesh2, mat);
-	Matrix44 model;
-	model.setTranslation(0.0f, 0.0f, 0.0f);   // posición inicial
-	model.scale(0.1f, 0.1f, 0.1f);
-	World::DayMap->player->model = model;
-	World::DayMap->player->canrender = false;
-	World::DayMap->root->addChild(World::DayMap->player);
+
 
 }
 void GameDayStage::OnEnter(Stage* last_stage) {
 	//init game stage
 	Game::instance->setMouseLocked(true);
+
+	World::player->MoveTo(vec3(0.0));
 	timer = inittime;
 }
 void GameDayStage::OnExit(Stage* last_stage) {
@@ -169,13 +161,12 @@ void GameNightStage::Init() {
 	Mesh* mesh2 = Mesh::Get("data/Rat/Cube.001/Cube.001.obj");
 	mat.color = Vector4(1, 1, 1, 1);
 	mat.diffuse = Texture::Get("data/textures/rat.tga");
-	World::NightMap->player = new Player(mesh2, mat);
+	World::player = new Player(mesh2, mat);
 	Matrix44 model;
 	model.setTranslation(0.0f, 0.0f, 0.0f);   // posición inicial
 	model.scale(0.1f, 0.1f, 0.1f);
-	World::NightMap->player->model = model;
-	World::NightMap->player->canrender = false;
-	World::NightMap->root->addChild(World::NightMap->player);
+	World::player->model = model;
+	World::player->canrender = false;
 	
 }
 void GameNightStage::OnEnter(Stage* last_stage) {
@@ -183,6 +174,7 @@ void GameNightStage::OnEnter(Stage* last_stage) {
 	BASS_ChannelPlay(hSampleChannel, false);
 
 	Game::instance->setMouseLocked(true);
+	World::player->MoveTo(vec3(0.0));
 	timer = inittime;
 }
 void GameNightStage::OnExit(Stage* last_stage) {
@@ -228,6 +220,7 @@ bool GameNightStage::onKeyDown(SDL_KeyboardEvent event) {
 		pulse.active = !pulse.active;
 		break;
 	case SDLK_e: stagechange = !stagechange; break;
+
 	case SDLK_RSHIFT:Game::instance->mouse_glocked = !Game::instance->mouse_glocked; Game::instance->setMouseLocked(Game::instance->mouse_glocked); break;
 	}
 	

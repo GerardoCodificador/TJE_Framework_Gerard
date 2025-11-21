@@ -31,7 +31,11 @@ Player::Player(Mesh* m, Material mat) {
 
 void Player::onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type) {
 	if (Type == WALL)canmove = false;
-	if (Type == ITEM)point++;
+	if (Type == ITEM){
+		Item* collided = static_cast<Item*>(e);
+		int collided_i = static_cast<EntityCollider*>(e->children[0])->closest;
+		if(collided->active[collided_i])point++;
+	}
 }
 void Player::update(float deltatime,Camera& camera) {
 
@@ -56,6 +60,8 @@ void Player::update(float deltatime,Camera& camera) {
 	Vector3 front = mYaw.frontVector().normalize();
 	Vector3 right = mYaw.rightVector().normalize();
 	bool ismoving = false;
+	walk_speed = 0.5f;
+	if(Input::isKeyPressed(SDL_SCANCODE_LSHIFT))walk_speed = 1.5f;
 	if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP)){
 		position += front * walk_speed * deltatime;
 		ismoving = true;

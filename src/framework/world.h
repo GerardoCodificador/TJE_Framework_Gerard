@@ -40,9 +40,10 @@ public:
     }
     static World* DayMap;
     static World* NightMap;
+    static Player* player;
+
 	Entity* root;
     EntityMesh* skybox;
-    Player* player;
     std::vector<MapArea>Areas;
 	void Init(const char* rootname);
 	void Update(float deltaTime, Camera& camera);

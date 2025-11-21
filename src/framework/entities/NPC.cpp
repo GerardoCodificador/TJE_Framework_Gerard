@@ -21,14 +21,7 @@ NPC::NPC(Texture* tex, std::string inname,vec3 pos) {
 
 };
 void NPC::update(float deltatime,Camera& camera) {
-	Vector3 PlayerPos;
-	if (Game::instance->currentStage == eStage::STAGE_GAMEDAY) {
-		PlayerPos = World::DayMap->player->model.getTranslation();
-	}
-	else if (Game::instance->currentStage == eStage::STAGE_GAMENIGHT) {
-
-		PlayerPos = World::NightMap->player->model.getTranslation();
-	}
+	Vector3 PlayerPos = World::player->model.getTranslation();
 	Vector3 myPos = model.getTranslation();
 
 	Vector3 target = PlayerPos;

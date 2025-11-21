@@ -1,6 +1,7 @@
 #include "framework/world.h"
 World* World::DayMap = nullptr;
 World* World::NightMap = nullptr;
+Player* World::player = nullptr;
 
 void World::Init(const char* rootname) {
 	SceneParser parser;
@@ -52,6 +53,8 @@ void World::Init(const char* rootname) {
 }
 void World::Update(float deltaTime, Camera& camera) {
 	root->update(deltaTime,camera);
+
+	player->update(deltaTime, camera);
 }
 void World::Render(Camera& camera) {
 	glDisable(GL_BLEND);
@@ -63,6 +66,7 @@ void World::Render(Camera& camera) {
 	skybox->render(&camera);
 
 	root->render(&camera);
+	player->render(&camera);
 	
 
 }

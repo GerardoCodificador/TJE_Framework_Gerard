@@ -36,4 +36,12 @@ public:
 	void onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type);
 	void update(float elapsed_time,Camera& camera);
 	void render(Camera* camera);
+
+
+	void MoveTo(const vec3& pos)
+	{
+		model.setIdentity();
+		model.translate(pos.x, pos.y, pos.z);
+		model.scale(0.1f, 0.1f, 0.1f);
+	}
 };
