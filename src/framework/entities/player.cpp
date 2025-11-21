@@ -14,12 +14,12 @@ Player::Player(Mesh* m, Material mat) {
 	collider->collider = transformBoundingBox(model, mesh->box);
 	this->addChild(collider);
 	Material ma;
-	ma.color= Vector4(1, 1, 1, 1);
+	ma.color = Vector4(1, 1, 1, 1);
 	ma.diffuse = Texture::Get("data/textures/HandLamp.tga");
 	LampMat = ma;
-
-
-};
+	Vector2 size = Vector2(0.2f, 0.2f);
+	playerUI = new EntityUI(Vector2(Game::instance->window_width - size.x, Game::instance->window_height - size.y), size, ma);
+}
 void Player::update(float deltatime,Camera& camera) {
 
 	Vector3 position =
@@ -181,6 +181,8 @@ void Player::render(Camera* camera) {
 	Mesh* hudQuad=new Mesh();
 	hudQuad->createQuad(0.6f, 0.5f+0.02* std::sin(actualy), 0.8f, 1.0f, false);
 	hudQuad->uploadToVRAM();
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	shader->enable();

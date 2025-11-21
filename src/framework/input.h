@@ -63,7 +63,9 @@ struct GamepadState
 	HATState hat;		//digital pad
 
 	bool isButtonPressed(int num) { return button[num] != 0; }
-	bool wasButtonPressed(int num) { return (button[num] & !prev_button[num]) != 0; }
+	bool wasButtonActved(int num) { return (button[num] & !prev_button[num]) != 0; }
+
+	bool wasButtonPressed(int num) { return (!button[num] & prev_button[num]) != 0; }
 	bool didDirectionChanged(char dir) { return direction != prev_direction && (direction & dir) != 0; }
 	float getAxisDelta(int num) { float dt = prev_axis[num] - axis[num]; if (fabsf(dt) > 0.6f) return dt; else return 0.0f; }
 };

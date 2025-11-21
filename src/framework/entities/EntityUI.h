@@ -12,26 +12,18 @@
 #include "framework/world.h"
 #include "framework/input.h"
 #include "game/game.h"
-#include "framework/entities/EntityUI.h"
+
 class EntityMesh;
 class EntityCollider;
-class ENtityUI;
-class Player :public EntityMesh {
+struct eUITYPE {};
+class EntityUI : public EntityMesh {
 public:
-	Player() {};
-	Player(Mesh* m, Material mat);
-		
-	EntityCollider* collider;
-	int point = 0;
-	float yaw = 0.0;
-	float pitch = 0.0;
-	float walk_speed = 0.50f;
-	float camera_speed = 0.3f;
-	Vector3 velocity;
-	Material LampMat;
-	float time = 0.0f;
-	EntityUI* playerUI;
-	~Player(){}
-	void update(float elapsed_time,Camera& camera);
+	EntityUI() {};
+	EntityUI(Vector2 pos, Vector2 new_size, const Material mat);
+	vec2 position;
+	vec2 size;
+
+	void Update(float elapsed_time, Camera& camera);
 	void render(Camera* camera);
+
 };
