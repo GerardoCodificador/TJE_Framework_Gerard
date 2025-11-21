@@ -15,7 +15,7 @@
 #include "framework/entities/EntityUI.h"
 class EntityMesh;
 class EntityCollider;
-class ENtityUI;
+class EntityUI;
 class Player :public EntityMesh {
 public:
 	Player() {};
@@ -31,7 +31,9 @@ public:
 	Material LampMat;
 	float time = 0.0f;
 	EntityUI* playerUI;
+	bool canmove = true;
 	~Player(){}
+	void onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type);
 	void update(float elapsed_time,Camera& camera);
 	void render(Camera* camera);
 };

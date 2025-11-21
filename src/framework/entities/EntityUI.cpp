@@ -1,11 +1,23 @@
 #include "framework/entities/EntityUI.h"
 
 EntityUI::EntityUI(Vector2 pos, Vector2 new_size, const Material mat) {
-	material = new Material(mat);
-	position = pos;
-	size = new_size;
+	material = new Material();
+	material->shader = mat.shader;       // si quieres reusar
+	material->diffuse = mat.diffuse;
+	position = Vector2(pos.x / Game::instance->window_width, pos.y / Game::instance->window_height);
+	size =Vector2(new_size.x / Game::instance->window_width, new_size.y / Game::instance->window_height);
 	mesh = new Mesh();
-	mesh->createQuad(pos.x, pos.y,size.x,size.y, false);
+
+	mesh->createQuad(position.x,position.y,size.x,size.y , false);
+	
+	mesh->uploadToVRAM();
+}
+void EntityUI::Updateposition(Vector2 deltamove) {
+	Vector2 newpos= Vector2(position.x + deltamove.x / Game::instance->window_width, position.y + deltamove.y / Game::instance->window_height);
+
+	mesh->createQuad(newpos.x, newpos.y, size.x, size.y, false);
+
+	mesh->uploadToVRAM();
 }
 void EntityUI::render(Camera* camera) {
 	if (!canrender)return;
@@ -16,16 +28,20 @@ void EntityUI::render(Camera* camera) {
 	if (!material->shader) {
 		material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/pulse.fs");
 	}
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	Shader* shader = material->shader;
 	shader->enable();
-	shader->setUniform("u_model", model);
-	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
-	shader->setUniform("u_color", material->color);
-	shader->setUniform("u_pulse_color", pulse.color);
-	shader->setUniform("u_pulse_width", pulse.width);
-	shader->setUniform3("u_pulse_center", pulse.center);
-	shader->setUniform("u_pulse_radius", pulse.radius);
-	shader->setUniform("u_pulse_active", pulse.active);
+	
+	shader->setUniform("u_model", model); Camera camera2D;
+	camera2D.view_matrix = Matrix44(); // Set View to identity
+	camera2D.setOrthographic(0, Game::instance->window_width,Game::instance-> window_height, 0, -1, 1);
+	shader->setUniform("u_viewprojection", camera2D.viewprojection_matrix);
+	shader->setUniform("u_resolution", Vector2((float)Game::instance->window_width, (float)Game::instance->window_height));
 	if (material->diffuse)shader->setTexture("u_texture", material->diffuse, 0);
+	mesh->render(GL_TRIANGLES);
 	shader->disable();
 }

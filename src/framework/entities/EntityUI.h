@@ -20,10 +20,11 @@ class EntityUI : public EntityMesh {
 public:
 	EntityUI() {};
 	EntityUI(Vector2 pos, Vector2 new_size, const Material mat);
-	vec2 position;
-	vec2 size;
+	Vector2 position;
+	Vector2 size;
 
 	void Update(float elapsed_time, Camera& camera);
+	void Updateposition(Vector2 deltamove);
 	void render(Camera* camera);
 
 };

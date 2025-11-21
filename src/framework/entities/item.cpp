@@ -9,9 +9,9 @@ Item::Item(Mesh* m, Material mat) {
 
 
 	collider->mesh = Mesh::Get("data/meshes/sphere.obj");
-	collider->models = models;
-	collider->model.translate(0, 0.5, 0);
+
 	collider->isInstanced = true;
+	collider->type = SPHERE;
 	this->addChild(collider);
 	isInstanced = true;
 

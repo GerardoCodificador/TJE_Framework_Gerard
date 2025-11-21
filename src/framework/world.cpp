@@ -42,7 +42,7 @@ void World::Init(const char* rootname) {
 		else {
 			collider->collider = BoundingBox(vec3(0),vec3(0));
 		}
-		
+		collider->type = BOX;
 		
 		root->children[i]->addChild(collider);
 	}

@@ -1,4 +1,4 @@
-#include "framework/entities/player.h"
+﻿#include "framework/entities/player.h"
 int i_saved;
 float actualy;
 
@@ -12,13 +12,26 @@ Player::Player(Mesh* m, Material mat) {
 	collider->model = model;
 	collider->is_dynamic = true;
 	collider->collider = transformBoundingBox(model, mesh->box);
+	collider->type = SPHERE;
 	this->addChild(collider);
 	Material ma;
 	ma.color = Vector4(1, 1, 1, 1);
 	ma.diffuse = Texture::Get("data/textures/HandLamp.tga");
+	ma.shader = Shader::Get("data/shaders/HUD.vs", "data/shaders/HUD.fs"); // ✔ PRIMERO shader
+
 	LampMat = ma;
-	Vector2 size = Vector2(0.2f, 0.2f);
-	playerUI = new EntityUI(Vector2(Game::instance->window_width - size.x, Game::instance->window_height - size.y), size, ma);
+
+	Vector2 size = Vector2(1* Game::instance->window_width*ma.diffuse->width/ ma.diffuse->height, 0.5 * Game::instance->window_height * ma.diffuse->height / ma.diffuse->width);
+	playerUI = new EntityUI(Vector2(
+		Game::instance->window_width - size.x/2,
+		size.y/2
+	), size, ma);
+}
+
+
+void Player::onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type) {
+	if (Type == WALL)canmove = false;
+	if (Type == ITEM)point++;
 }
 void Player::update(float deltatime,Camera& camera) {
 
@@ -75,50 +88,36 @@ void Player::update(float deltatime,Camera& camera) {
 	actualy = time;
 	pulse.radius = 2 + std::sin(time) * 0.3f;
 	pulse.center = position;
+
+	Vector2 move = Vector2(0, 0.02 * Game::instance->window_height * std::sin(actualy));
+	playerUI->Updateposition(move);
 	Matrix44 mewModel;
 	
 	std::vector<sCollisionData> collisions;
 	eCollisionFilter filter=WALL;
-	bool entercollision = false;
+	
 	if(ismoving){
+
+
 		if (Game::instance->currentStage == eStage::STAGE_GAMEDAY) {
 
 			// Check if collides with wall using sphere (radius = 1)
-			EntityMesh* entity;
+			EntityCollider* entity;
 			vec3 dirtoobj;
 			Vector3 objectcenter = position;
 			int closest = 0;
-			for (int i = 0; i < World::DayMap->root->children.size(); i++) {
+			for (int i = 1; i < World::DayMap->root->children.size(); i++) {
 				collisions.clear();
-				entity = static_cast<EntityMesh*>(World::DayMap->root->children[i]);
+				entity = static_cast<EntityCollider*>(World::DayMap->root->children[i]->children[0]);
 
-				if (Collision::TestEntitySphere(entity->children[0], 50, objectcenter, collisions, WALL) && dynamic_cast<Player*>(entity) == nullptr) {
-					dirtoobj = (entity->children[0]->model.getTranslation() - position).normalize();
-					entercollision = true;
-					if ((dirtoobj.x / std::abs(dirtoobj.x) == dir.x / std::abs(dir.x) || (dir.x == 0 && dirtoobj.x == 0)) && (dirtoobj.y / std::abs(dirtoobj.y) == dir.y / std::abs(dir.y)) || (dir.y == 0 && dirtoobj.y == 0) && (dirtoobj.z / std::abs(dirtoobj.z) == dir.z / std::abs(dir.z)) || (dir.z == 0 && dirtoobj.z == 0)) {
-						entercollision = true;
-						i_saved = i;
+
+				if (entity->TestCollisionSphere(0.2, objectcenter, collisions, PLAYER)) {
+					if (collisions[0].collider->layer == WALL) {
+						onColisionEnter(entity->parent, collisions[0], entity->layer);
+
+						static_cast<EntityMesh*>(entity->parent)->onColisionEnter(this, collisions[0], PLAYER);
+
 					}
-				}
-
-				if (Collision::TestEntitySphere(entity->children[0], 1, objectcenter, collisions, ITEM) && dynamic_cast<Player*>(entity) == nullptr) {
-
-					for (int j = 0; j < entity->models.size(); j++) {
-
-						dirtoobj = (entity->models[j].getTranslation() - position);
-						if (dirtoobj.length() < (entity->models[closest].getTranslation() - position).length()) {
-							closest = j;
-						}
-					}
-					if (static_cast<Item*>(entity)->active[closest])point++;
-					static_cast<Item*>(entity)->active[closest] = false;
-				}
-				if (Collision::TestEntitySphere(entity->children[0], 1, objectcenter, collisions, TYPENPC) && dynamic_cast<Player*>(entity) == nullptr) {
-					if(point >0){
-						point--;
-						std::cout << "Que bueno" << std::endl;
-					}
-
 				}
 			}
 		
@@ -127,44 +126,33 @@ void Player::update(float deltatime,Camera& camera) {
 
 
 			// Check if collides with wall using sphere (radius = 1)
-			EntityMesh* entity;
+			EntityCollider* entity;
 			vec3 dirtoobj;
 			Vector3 objectcenter = position;
 			int closest=0;
-			for (int i = 0; i < World::NightMap->root->children.size(); i++) {
+			for (int i = 1; i < World::NightMap->root->children.size(); i++) {
 				collisions.clear();
-				entity = static_cast<EntityMesh*>( World::NightMap->root->children[i]);
+				entity = static_cast<EntityCollider*>( World::NightMap->root->children[i]->children[0]);
 				
-				if (Collision::TestEntitySphere(entity->children[0], 50, objectcenter, collisions, WALL) && dynamic_cast<Player*>(entity) == nullptr) {
-				dirtoobj = ( entity->children[0]->model.getTranslation() - position).normalize();
-				entercollision = true;
-				if((dirtoobj.x/std::abs(dirtoobj.x)== dir.x / std::abs(dir.x)||(dir.x==0&&dirtoobj.x==0))&&( dirtoobj.y / std::abs(dirtoobj.y) == dir.y/ std::abs(dir.y)) || (dir.y == 0 && dirtoobj.y == 0) && (dirtoobj.z / std::abs(dirtoobj.z) == dir.z / std::abs(dir.z)) || (dir.z == 0 && dirtoobj.z == 0)){
-					entercollision = true;
-					i_saved = i;
-					}
-				}
 
-				if (Collision::TestEntitySphere(entity->children[0], 1, objectcenter, collisions, ITEM) && dynamic_cast<Player*>(entity) == nullptr) {
+				if (entity->TestCollisionSphere(0.2, objectcenter, collisions, PLAYER)) {
+					onColisionEnter(entity->parent, collisions[0], entity->layer);
+
+					static_cast<EntityMesh*>(entity->parent)->onColisionEnter(this, collisions[0], PLAYER);
+
 					
-					for(int j=0;j<entity->models.size();j++){
-
-						dirtoobj = (entity->models[j].getTranslation() - position);
-						if (dirtoobj.length() < (entity->models[closest].getTranslation() - position).length()) {
-							closest = j;
-						}
-					}
-					if (static_cast<Item*>(entity)->active[closest])point++;
-					static_cast<Item*>(entity)->active[closest] = false;
 				}
 			}
 		}
 		if
-			(!entercollision) {
+			(canmove) {
 			model.setIdentity();
 			model.translate(position.x, position.y, position.z);
 			model = mRotation * model;
 			model.scale(0.1f, 0.1f, 0.1f);
+			
 		}
+		canmove = true;
 			
 	}
 	// Update the camera with new eye & center
@@ -177,44 +165,47 @@ void Player::update(float deltatime,Camera& camera) {
 	Entity::update(deltatime, camera);
 }
 void Player::render(Camera* camera) {
-	Shader* shader = Shader::Get("data/shaders/HUD.vs", "data/shaders/HUD.fs");
-	Mesh* hudQuad=new Mesh();
-	hudQuad->createQuad(0.6f, 0.5f+0.02* std::sin(actualy), 0.8f, 1.0f, false);
-	hudQuad->uploadToVRAM();
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	shader->enable();
+	//Shader* shader;
+	//shader = Shader::Get("data/shaders/HUD.vs", "data/shaders/HUD.fs");
+	//Mesh* hudQuad=new Mesh();
+	//hudQuad->createQuad(0.6f, 0.5f+0.02* std::sin(actualy), 0.8f, 1.0f, false);
+	//hudQuad->uploadToVRAM();
+	//glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_CULL_FACE);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//shader->enable();
 
-	// Uniform: resoluci�n de la pantalla
-	shader->setUniform("u_resolution", Vector2((float)Game::instance->window_width, (float)Game::instance->window_height));
+	//// Uniform: resolución de la pantalla
+	//shader->setUniform("u_resolution", Vector2((float)Game::instance->window_width, (float)Game::instance->window_height));
 
-	// Textura del HUD
-	if (LampMat.diffuse)
-		shader->setTexture("u_texture", LampMat.diffuse, 0);
+	//// Textura del HUD
+	//if (LampMat.diffuse)
+	//	shader->setTexture("u_texture", LampMat.diffuse, 0);
 
-	// Renderizamos el quad en espacio de pantalla
-	hudQuad->render(GL_TRIANGLES);
+	//// Renderizamos el quad en espacio de pantalla
+	//hudQuad->render(GL_TRIANGLES);
 
-	shader->disable();
+	//shader->disable();
 
-	glDisable(GL_DEPTH_TEST);
-	if (!RENDERCOLISIONS) return;
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
-	Mesh* meshs = Mesh::Get("data/meshes/sphere.obj");
-	shader->enable();
+	//glDisable(GL_DEPTH_TEST);
+	/*
+	if (RENDERCOLISIONS){
+			shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
+		Mesh* meshs = Mesh::Get("data/meshes/sphere.obj");
+		shader->enable();
 
-	Matrix44 m;
-	m.setIdentity();
-	m.translate(model.getTranslation());
-	m.scale(vec3(1));
-	shader->setUniform("u_color", Vector4(0.0f, 0.0f, 0.0f, 1.0f));
-	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
-	shader->setUniform("u_model", m);
+		Matrix44 m;
+		m.setIdentity();
+		m.translate(model.getTranslation());
+		m.scale(vec3(1));
+		shader->setUniform("u_color", Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+		shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+		shader->setUniform("u_model", m);
 
-	meshs->render(GL_LINES);
-	shader->disable();
+		meshs->render(GL_LINES);
+		shader->disable();
+	}*/
 	/*Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
 	Mesh * mesh = Mesh::Get("data/meshes/sphere.obj");
 
@@ -242,4 +233,6 @@ void Player::render(Camera* camera) {
 
 	shader->disable();
 	*/
+	playerUI->render(camera);
+	Entity::render(camera);
 }

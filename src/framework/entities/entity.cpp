@@ -80,52 +80,53 @@ void EntityMesh::render(Camera* camera) {
 	}
 
 	std::vector<Matrix44> MatstoRender;
-	if (isInstanced) {
-		const std::vector<Matrix44> globalMats = getArrayofGlobalMatrix();
-		float distance = 10.0f;
-		BoundingBox box;
-		bool skip = false;
-		for (int i = 0; i < models.size(); i++) {
-			box=transformBoundingBox(globalMats[i], mesh->box);
+	if(culling){
+		if (isInstanced) {
+			const std::vector<Matrix44> globalMats = getArrayofGlobalMatrix();
+			float distance = 10.0f;
+			BoundingBox box;
+			bool skip = false;
+			for (int i = 0; i < models.size(); i++) {
+				box=transformBoundingBox(globalMats[i], mesh->box);
+				if (camera->eye.distance(box.center) > distance + box.halfsize.length()) {
+					skip = true;
+				}
+
+				//Frustum Culling
+				if (camera->testSphereInFrustum(box.center, box.halfsize.length()) != CLIP_INSIDE) {
+					skip = true;
+				}
+				if (!skip) {
+					MatstoRender.push_back(models[i]);
+				}
+				skip = false;
+
+			}
+			if (MatstoRender.size() < 1) {
+				Entity::render(camera);
+				return;
+			}
+		}
+		else{
+			const Matrix44& globalMat = getGlobalMatrix();
+			float distance = 10.0f;
+			BoundingBox box = transformBoundingBox(globalMat, mesh->box);
+
+			//Distance CUlling
 			if (camera->eye.distance(box.center) > distance + box.halfsize.length()) {
-				skip = true;
+				Entity::render(camera);
+				return;
 			}
 
 			//Frustum Culling
 			if (camera->testSphereInFrustum(box.center, box.halfsize.length()) != CLIP_INSIDE) {
-				skip = true;
+				Entity::render(camera);
+				return;
 			}
-			if (!skip) {
-				MatstoRender.push_back(models[i]);
-			}
-			skip = false;
 
-		}
-		if (MatstoRender.size() < 1) {
-			Entity::render(camera);
-			return;
-		}
-	}
-	else{
-		const Matrix44& globalMat = getGlobalMatrix();
-		float distance = 10.0f;
-		BoundingBox box = transformBoundingBox(globalMat, mesh->box);
-
-		//Distance CUlling
-		if (camera->eye.distance(box.center) > distance + box.halfsize.length()) {
-			Entity::render(camera);
-			return;
-		}
-
-		//Frustum Culling
-		if (camera->testSphereInFrustum(box.center, box.halfsize.length()) != CLIP_INSIDE) {
-			Entity::render(camera);
-			return;
 		}
 
 	}
-
-
 	if (isInstanced) {
 
 		if (!material->shader) {

@@ -6,7 +6,7 @@
 #include "graphics/material.h"
 #include "graphics/shader.h"
 #include "graphics/texture.h"
-
+#include "framework/collision.h"
 class Camera;
 class Entity {
 
@@ -60,6 +60,7 @@ public:
 	std::vector<Matrix44> models; // For instanced rendering
 
 	// Methods overwritten from base class
+	virtual void onColisionEnter(Entity* e,sCollisionData collisiondata, eCollisionFilter Type) {};
 	virtual void render(Camera* camera);
 	virtual void update(float elapsed_time,Camera& camera);
 };
