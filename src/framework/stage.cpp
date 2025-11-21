@@ -100,6 +100,8 @@ bool GameDayStage::onKeyDown(SDL_KeyboardEvent event) {
 	{
 	case SDLK_ESCAPE: Game::instance->setStage(eStage::STAGE_MENU); break; //ESC key, kill the app
 	case SDLK_F1: Shader::ReloadAll(); break;
+
+	case SDLK_F2: RENDERCOLISIONS = !RENDERCOLISIONS; break;
 	case SDLK_SPACE:
 		pulse.active = !pulse.active;
 		break;

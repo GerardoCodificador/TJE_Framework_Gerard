@@ -129,8 +129,9 @@ void EntityCollider::render(Camera* camera) {
 			// Enable shader and pass uniforms 
 			shader->setUniform("u_model",model);
 			std::cout << model.getTranslation().x<< ","<<model.getTranslation().y << "," << model.getTranslation().z << "," << std::endl;
+			std::cout << model._11 << "," << model._22 << "," << model._33 << "," << std::endl;
 			shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
-			shader->setUniform("u_color", material->color);
+			shader->setUniform("u_color", layer==TYPENPC?vec4(1,0,0,1): material->color);
 			shader->setUniform("u_pulse_color", pulse.color);
 			shader->setUniform("u_pulse_width", pulse.width);
 			shader->setUniform3("u_pulse_center", pulse.center);

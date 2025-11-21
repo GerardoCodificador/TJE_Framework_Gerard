@@ -13,6 +13,7 @@ NPC::NPC(Texture* tex, std::string inname,vec3 pos) {
 	EntityCollider* collider = new EntityCollider(mmesh, *mmat);
 	collider->layer = TYPENPC;
 	collider->model = model;
+	collider->model.scale(0.2f);
 	collider->is_dynamic = true;
 	collider->collider = transformBoundingBox(model, mmesh->box);
 	this->addChild(collider);
@@ -73,5 +74,6 @@ void NPC::render(Camera* camera) {
 
 	glDisable(GL_DEPTH_TEST);
 	
-	
+
+	Entity::render(camera);
 }
