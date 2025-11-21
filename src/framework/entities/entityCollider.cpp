@@ -39,7 +39,7 @@ void EntityCollider::update(float elapsed_time,Camera& camera) {
 bool EntityCollider::TestCollisionSphere(float radius, const Vector3& center, std::vector<sCollisionData>& collisions, eCollisionFilter filter) {
 	if (filter == layer)return false;
 	if (type == MESH){
-		bool output= Collision::TestEntitySphere(this, radius, center, collisions, filter);
+		bool output= Collision::TestEntitySphere(this, radius, center, collisions, layer);
 		vec3 dirtoobj;
 		if (isInstanced) {
 			for (int j = 0; j < models.size(); j++) {
@@ -198,13 +198,10 @@ void EntityCollider::render(Camera* camera) {
 		}
 		if (type == BOX) {
 			int i = 0;
-			BoundingBox box=mesh->box;
 			for (Matrix44 actualModel : MatstoRender) {
-				mesh->box = colliders[i];
 				mesh->renderBounding(actualModel,false);
 				i++;
 			}
-			mesh->box = box;
 		}
 		else{
 			if (!material->shader) {
