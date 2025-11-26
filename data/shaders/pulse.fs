@@ -37,9 +37,7 @@ void main() {
 
 
     vec4 final_color = u_color;
-	if(!u_isinstanced==1){
-		final_color =mix(v_color,u_color,0.5);
-	}
+
     if(u_is_texture == 0){
         final_color = texture(u_texture, uv);
     }
@@ -47,8 +45,8 @@ void main() {
     // ---------------------------
     // 2) ILUMINACIÓN RADIAL DESDE EL PLAYER
     // ---------------------------
-    float max_light_distance = u_pulse_radius;  // hasta dónde llega la luz
-    float min_light = 0.1;           // oscuridad mínima
+    float max_light_distance = u_pulse_radius;  
+    float min_light = 0.1;           
 
     float light_dist = length(world_position - u_pulse_center);
     float light_factor = 1.0 - clamp(light_dist / max_light_distance, 0.0, 1.0);

@@ -115,3 +115,8 @@ void Button::render(Camera* camera) {
 	mesh->render(GL_TRIANGLES);
 	shader->disable();
 }
+
+CodeMachine::CodeMachine(Vector2 pos, Vector2 new_size) {
+	position = Vector2(pos.x / Game::instance->window_width, pos.y / Game::instance->window_height);
+	size = Vector2(new_size.x / Game::instance->window_width, new_size.y / Game::instance->window_height);
+}

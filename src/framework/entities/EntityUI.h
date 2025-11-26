@@ -47,3 +47,14 @@ public:
 	void render(Camera* camera);
 
 };
+class CodeMachine :public EntityUI {
+public:
+	CodeMachine() {}
+	CodeMachine(Vector2 pos, Vector2 new_size);
+	Vector2 position;
+	Vector2 size;
+	eMouseState state;
+	void update(float elapsed_time, Camera& camera);
+	void Updateposition(Vector2 deltamove);
+	void render(Camera* camera);
+};
