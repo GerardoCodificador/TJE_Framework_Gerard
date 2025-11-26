@@ -22,8 +22,10 @@ void World::Init(const char* rootname) {
 
 	EntityCollider* collider;
 	EntityMesh *entity;
+	Door* lastdoor = nullptr;
 	for (int i = 0; i < root->children.size(); i++) {
 		entity = static_cast<EntityMesh*>(root->children[i]);
+		
 		if (entity == nullptr) {
 			continue;
 		}
@@ -31,7 +33,8 @@ void World::Init(const char* rootname) {
 		collider->model = entity->model;
 		collider->models = entity->models;
 		collider->isInstanced = entity->isInstanced;
-		collider->layer = isFloor(entity) ? FLOOR : isWall(entity) ? WALL : NONE;
+		collider->layer = isFloor(entity) ? FLOOR : isWall(entity) ? WALL :isSpawner(entity)? SPAWNER:isDoor(entity)?DOOR:isItem(entity)?ITEM:NONE;
+		entity->material->color = isFloor(entity) ? Vector4(0.9) : isWall(entity) ? Vector4(1) : isSpawner(entity) ? Vector4(0.25, 0, 0.8, 1) : isDoor(entity) ? Vector4(0.102469, 0.040966, 0.023005,1) : isItem(entity) ? Vector4(0, 1, 1, 1) : Vector4(0, 0, 0, 1);
 		if (entity->mesh) {
 			if (!collider->isInstanced)collider->collider = transformBoundingBox(entity->model, entity->mesh->box);
 			if (collider->isInstanced) {
@@ -40,10 +43,36 @@ void World::Init(const char* rootname) {
 				}
 			}
 		}
+		
 		else {
 			collider->collider = BoundingBox(vec3(0),vec3(0));
 		}
+		if (isDoorSpawn(entity)) {
+			lastdoor->DoorSpawns = collider->colliders;
+			root->children[i-1]->addChild(collider);
+		}
 		collider->type = BOX;
+		if (collider->layer == DOOR)collider->type = SPHERE;
+		if (collider->layer == ITEM) {
+
+		}
+	
+		if (isDoor(entity)||isKeyDoor(entity)) {
+
+			lastdoor = static_cast<Door*>(entity);
+			lastdoor->isInstanced = true;
+			if (isDoor(lastdoor))lastdoor->MyType = NORMAL;
+			else lastdoor->MyType = KEYED;
+		}
+		if (isFloor(entity)) {
+			entity->material->diffuse = Texture::Get("data/textures/wood.tga");
+		}
+		if (isSpawner(entity)) {
+			entity->canrender = false;
+		}
+		if (isItem(entity)) {
+			entity->material->diffuse = Texture::Get("data/textures/Desk.tga");
+		}
 		
 		root->children[i]->addChild(collider);
 	}

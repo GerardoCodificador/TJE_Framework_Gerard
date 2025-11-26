@@ -40,9 +40,11 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	stages[eStage::STAGE_GAMEDAY] = new GameDayStage();
 
 	stages[eStage::STAGE_GAMENIGHT] = new GameNightStage();
+	stages[eStage::GAMEOVER]=new GameOver();
 	stages[eStage::STAGE_GAMEDAY]->Init();
 	stages[eStage::STAGE_MENU]->Init();
 	stages[eStage::STAGE_GAMENIGHT]->Init();
+	stages[eStage::GAMEOVER]->Init();
 	mouse_glocked = false;
 	SDL_ShowCursor(!mouse_glocked);
 
@@ -137,8 +139,12 @@ void Game::onResize(int width, int height)
     std::cout << "window resized: " << width << "," << height << std::endl;
 	glViewport( 0,0, width, height );
 	camera->aspect =  width / (float)height;
+
+	Vector2 previous = Vector2(window_width, window_height);
 	window_width = width;
 	window_height = height;
+	Vector2 next= Vector2(window_width, window_height);
+	World::player->onResize(previous, next);
 }
 
 void Game::setMouseLocked(bool must_lock)

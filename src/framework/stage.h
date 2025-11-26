@@ -20,11 +20,13 @@ extern bool RENDERCOLISIONS;
 #include "framework/entities/NPC.h"
 #include "framework/scene_parser.h"
 #include "framework/world.h"
-
+class Button;
+class EntityUI;
 enum eStage {
 	STAGE_MENU,
 	STAGE_GAMEDAY,
-	STAGE_GAMENIGHT
+	STAGE_GAMENIGHT,
+    GAMEOVER
 };
 class Item;
 class Stage{
@@ -57,7 +59,8 @@ class MenuStage : public Stage{
 public:
 
     Image background;
-
+    EntityUI* Portada;
+    Button* play;
     Image font;
     Image minifontb,minifontw;
    
@@ -78,6 +81,33 @@ public:
     void onGamepadButtonDown(SDL_JoyButtonEvent event) override;
     void onGamepadButtonUp(SDL_JoyButtonEvent event) override;
     void onResize(int width, int height) override;*/
+};
+
+class GameOver : public Stage {
+public:
+
+    Image background;
+    Button* play;
+    Image font;
+    Image minifontb, minifontw;
+
+    void Init() override;
+    void OnEnter(Stage* last_stage) override;
+    void OnExit(Stage* last_stage) override;
+    void Update(float deltaTime, Camera& camera) override;
+    void Render(Camera& camera) override;
+
+
+    bool onKeyDown(SDL_KeyboardEvent event) override;
+
+    /* bool onKeyUp(SDL_KeyboardEvent event) override;
+     bool onMouseButtonDown(SDL_MouseButtonEvent event) override;
+     bool onMouseButtonUp(SDL_MouseButtonEvent event) override;
+     bool onMouseMove(SDL_MouseMotionEvent event) override;
+     void onMouseWheel(SDL_MouseWheelEvent event) override;
+     void onGamepadButtonDown(SDL_JoyButtonEvent event) override;
+     void onGamepadButtonUp(SDL_JoyButtonEvent event) override;
+     void onResize(int width, int height) override;*/
 };
 class GameDayStage : public Stage {
 public:

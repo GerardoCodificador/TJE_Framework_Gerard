@@ -13,6 +13,7 @@ Player::Player(Mesh* m, Material mat) {
 	collider->is_dynamic = true;
 	collider->collider = transformBoundingBox(model, mesh->box);
 	collider->type = SPHERE;
+	inventory = { 0,0 };
 	this->addChild(collider);
 	Material ma;
 	ma.color = Vector4(1, 1, 1, 1);
@@ -22,19 +23,57 @@ Player::Player(Mesh* m, Material mat) {
 	LampMat = ma;
 
 	Vector2 size = Vector2(1* Game::instance->window_width*ma.diffuse->width/ ma.diffuse->height, 0.5 * Game::instance->window_height * ma.diffuse->height / ma.diffuse->width);
-	playerUI = new EntityUI(Vector2(
+	playerUI.push_back(new EntityUI(Vector2(
 		Game::instance->window_width - size.x/2,
 		size.y/2
-	), size, ma);
+	), size, ma));
+	ma.color = Vector4(1, 1, 1, 1);
+
+	ma.diffuse = Texture::Get("data/textures/tecla_E.tga");
+	ma.shader = Shader::Get("data/shaders/HUD.vs", "data/shaders/HUD.fs"); // ✔ PRIMERO shader
+
+	size = Vector2(0.1 * Game::instance->window_width * ma.diffuse->width / ma.diffuse->height, 0.1 * Game::instance->window_height * ma.diffuse->height / ma.diffuse->width);
+	playerUI.push_back(new EntityUI(Vector2(
+		Game::instance->window_width*2/3 - size.x / 2,
+		Game::instance->window_height * 2 / 3-size.y / 2
+	), size, ma));
+	ma.color = Vector4(0,1);
+	ma.diffuse = Texture::Get("data/textures/black.tga");
+	ma.shader = Shader::Get("data/shaders/HUD.vs", "data/shaders/HUD.fs"); // ✔ PRIMERO shader
+
+
+	size = Vector2(3000,3000);
+	playerUI.push_back(new EntityUI(Vector2(
+		0,0
+	), size, ma));
+	ma.color = Vector4(0,1,1, 1);
+	ma.shader = Shader::Get("data/shaders/HUD.vs", "data/shaders/completioncircle.fs"); // ✔ PRIMERO shader
+
+
+	size = Vector2(0.2 * Game::instance->window_width , 0.2 * Game::instance->window_height );
+	playerUI.push_back(new EntityUI(Vector2(
+		Game::instance->window_width * 2 / 3 - size.x / 2,
+		Game::instance->window_height * 2 / 3 - size.y / 2
+	), size, ma));
 }
 
 
+void Player::onResize(Vector2 prev,Vector2 next) {
+	for (EntityUI* UI : playerUI) {
+
+	}
+}
 void Player::onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type) {
 	if (Type == WALL)canmove = false;
 	if (Type == ITEM){
 		Item* collided = static_cast<Item*>(e);
 		int collided_i = static_cast<EntityCollider*>(e->children[0])->closest;
-		if(collided->active[collided_i])point++;
+		
+	}
+	if (Type & INTERACTIVE) {		
+		playerUI[1]->canrender=true;
+		if (collisiondata.collider->type==BOX) 
+			canmove = false;
 	}
 }
 void Player::update(float deltatime,Camera& camera) {
@@ -50,6 +89,15 @@ void Player::update(float deltatime,Camera& camera) {
 	float limitAngle = M_PI * 0.4;
 	pitch = clamp(pitch, -limitAngle, limitAngle);
 
+	if (actual_stun > 0) {
+		actual_stun -= deltatime;
+		canmove = false;
+	}
+	else {
+		is_blackoff = false; 
+		actual_stun = 0;
+	}
+	playerUI[2]->canrender = is_blackoff;
 	// Create matrices individually and join them
 	Matrix44 mYaw;
 	mYaw.setRotation(yaw, Vector3(0, 1, 0));
@@ -61,6 +109,7 @@ void Player::update(float deltatime,Camera& camera) {
 	Vector3 right = mYaw.rightVector().normalize();
 	bool ismoving = false;
 	walk_speed = 0.5f;
+
 	if(Input::isKeyPressed(SDL_SCANCODE_LSHIFT))walk_speed = 1.5f;
 	if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP)){
 		position += front * walk_speed * deltatime;
@@ -96,75 +145,80 @@ void Player::update(float deltatime,Camera& camera) {
 	pulse.center = position;
 
 	Vector2 move = Vector2(0, 0.02 * Game::instance->window_height * std::sin(actualy));
-	playerUI->Updateposition(move);
+
+	playerUI[0]->Updateposition(move);
 	Matrix44 mewModel;
 	
 	std::vector<sCollisionData> collisions;
 	eCollisionFilter filter=WALL;
 	
-	if(ismoving){
 
 
-		if (Game::instance->currentStage == eStage::STAGE_GAMEDAY) {
+	if (Game::instance->currentStage == eStage::STAGE_GAMEDAY) {
 
-			// Check if collides with wall using sphere (radius = 1)
-			EntityCollider* entity;
-			vec3 dirtoobj;
-			Vector3 objectcenter = position;
-			int closest = 0;
-			for (int i = 1; i < World::DayMap->root->children.size(); i++) {
+		// Check if collides with wall using sphere (radius = 1)
+		EntityCollider* entity;
+		vec3 dirtoobj;
+		Vector3 objectcenter = position;
+		int closest = 0;
+		for (int i = 0; i < World::DayMap->root->children.size(); i++) {
+			
+			for(int j=0;j< World::DayMap->root->children[i]->children.size();j++){
 				collisions.clear();
-				entity = static_cast<EntityCollider*>(World::DayMap->root->children[i]->children[0]);
+				entity = static_cast<EntityCollider*>(World::DayMap->root->children[i]->children[j]);
 
-
-				if (entity->TestCollisionSphere(0.2, objectcenter, collisions, PLAYER)) {
-					if (collisions[0].collider->layer == WALL) {
-						onColisionEnter(entity->parent, collisions[0], entity->layer);
-
-						static_cast<EntityMesh*>(entity->parent)->onColisionEnter(this, collisions[0], PLAYER);
-
-					}
-				}
-			}
-		
-
-		}	else if (Game::instance->currentStage == eStage::STAGE_GAMENIGHT) {
-
-
-			// Check if collides with wall using sphere (radius = 1)
-			EntityCollider* entity;
-			vec3 dirtoobj;
-			Vector3 objectcenter = position;
-			int closest=0;
-			for (int i = 1; i < World::NightMap->root->children.size(); i++) {
-				collisions.clear();
-				entity = static_cast<EntityCollider*>( World::NightMap->root->children[i]->children[0]);
-				
 
 				if (entity->TestCollisionSphere(0.2, objectcenter, collisions, PLAYER)) {
 					onColisionEnter(entity->parent, collisions[0], entity->layer);
 
 					static_cast<EntityMesh*>(entity->parent)->onColisionEnter(this, collisions[0], PLAYER);
 
-					
+
 				}
 			}
 		}
-		if
-			(canmove) {
-			model.setIdentity();
-			model.translate(position.x, position.y, position.z);
-			model = mRotation * model;
-			model.scale(0.1f, 0.1f, 0.1f);
-			
+		
+
+	}	else if (Game::instance->currentStage == eStage::STAGE_GAMENIGHT) {
+
+
+		// Check if collides with wall using sphere (radius = 1)
+		EntityCollider* entity;
+		vec3 dirtoobj;
+		Vector3 objectcenter = position;
+		int closest=0;
+		for (int i = 0; i < World::NightMap->root->children.size(); i++) {
+			for (int j = 0; j < World::NightMap->root->children[i]->children.size(); j++) {
+
+				collisions.clear();
+				entity = static_cast<EntityCollider*>(World::NightMap->root->children[i]->children[j]);
+
+
+				if (entity->TestCollisionSphere(0.2, objectcenter, collisions, PLAYER)) {
+					onColisionEnter(entity->parent, collisions[0], entity->layer);
+
+					static_cast<EntityMesh*>(entity->parent)->onColisionEnter(this, collisions[0], PLAYER);
+
+
+				}
+			}
 		}
-		canmove = true;
+	}
+	if
+		(canmove) {
+		model.setIdentity();
+		model.translate(position.x, position.y, position.z);
+		model = mRotation * model;
+		model.scale(0.1f, 0.1f, 0.1f);
 			
 	}
+	canmove = true;
+		
+	
 	// Update the camera with new eye & center
 	//Vector3 eye = model.getTranslation()+Vector3(0,0.3f,0) + Vector3(0, 0.05f, 0) * std::cos(time) ;
 
-	Vector3 eye = model.getTranslation() + Vector3(0, 0.3f, 0) ;
+	Vector3 eye = model.getTranslation() + Vector3(0, 0.5, 0) ;
 	Vector3 center = eye + mRotation.frontVector().normalize() ;
 	Vector3 up = Vector3(0, 1, 0);
 	camera.lookAt(eye, center, up);
@@ -239,6 +293,10 @@ void Player::render(Camera* camera) {
 
 	shader->disable();
 	*/
-	playerUI->render(camera);
+	for (EntityUI* UI : playerUI) {
+
+		UI->render(camera);
+	}
+	playerUI[1]->canrender = false;
 	Entity::render(camera);
 }

@@ -18,14 +18,15 @@ void main()
 {	
 	//calcule the normal in camera space (the NormalMatrix is like ViewMatrix but without traslation)
 	v_normal = (u_model * vec4( a_normal, 0.0) ).xyz;
-	
 	//calcule the vertex in object space
 	v_position = a_vertex;
 	v_world_position = (u_model * vec4( v_position, 1.0) ).xyz;
 	
 	//store the color in the varying var to use it from the pixel shader
 	v_color = a_color;
-
+	if(a_color == vec4(0.0)) {
+		v_color = vec4(1.0); // blanco por defecto
+	}
 	//store the texture coordinates
 	v_uv = a_uv;
 

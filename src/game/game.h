@@ -22,6 +22,8 @@ public:
 	int window_width;
 	int window_height;
 
+	bool ask_to_change = false;
+	int answer;
 	//some globals
 	long frame;
     float time;

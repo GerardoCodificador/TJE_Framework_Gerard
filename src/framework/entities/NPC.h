@@ -21,6 +21,7 @@ public:
 	
 	Texture* texture;
 	EntityCollider* collider;
+	bool wait_for_answer=false;
 	int point = 0;
 	float yaw = 0.0;
 	float pitch = 0.0;
@@ -32,4 +33,5 @@ public:
 	~NPC(){}
 	void update(float elapsed_time,Camera& camera);
 	void render(Camera* camera);
+	void onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type);
 };

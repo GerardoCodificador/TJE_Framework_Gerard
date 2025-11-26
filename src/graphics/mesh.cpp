@@ -1153,7 +1153,7 @@ bool Mesh::parseMTL(const char* filename)
 		else if (tokens[0] == "map_Kd")
 		{
 			std::filesystem::path mesh_path = std::filesystem::path(filename);
-			info.Kd_texture = Texture::Get((mesh_path.parent_path().string() + "/" + tokens[1]).c_str());
+			info.Kd_texture = Texture::Get((mesh_path.parent_path().string() + "/" + tokens[tokens.size()-1]).c_str());
 		}
 		else if (tokens[0] == "newmtl") //material file
 		{

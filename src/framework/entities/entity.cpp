@@ -2,6 +2,7 @@
 #include "framework/camera.h"
 #include "framework/pulse.h"
 #include <algorithm>
+#include "framework/world.h"
 
 void Entity::render(Camera* camera)
 {
@@ -147,8 +148,13 @@ void EntityMesh::render(Camera* camera) {
 		shader->setUniform3("u_pulse_center", pulse.center);
 		shader->setUniform("u_pulse_radius", pulse.radius);
 		shader->setUniform("u_pulse_active", pulse.active);
-		if (material->diffuse)
-			shader->setUniform("u_texture", material->diffuse);
+
+		shader->setUniform("u_isinstanced", isInstanced);
+		if (material->diffuse) {
+			shader->setTexture("u_texture", material->diffuse, 0);
+			shader->setUniform("u_is_texture", 0);
+		}
+		else shader->setUniform("u_is_texture", 1);
 		mesh->renderInstanced(GL_TRIANGLES, MatstoRender.data(), MatstoRender.size());
 		shader->disable();
 	}
@@ -167,15 +173,20 @@ void EntityMesh::render(Camera* camera) {
 		// Enable shader and pass uniforms 
 		shader->setUniform("u_model", model);
 		shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
-		shader->setUniform("u_color", material->color);
+		shader->setUniform("u_color",  material->color);
 		shader->setUniform("u_pulse_color", pulse.color);
 		shader->setUniform("u_pulse_width",pulse.width);
 		shader->setUniform3("u_pulse_center", pulse.center);
 		shader->setUniform("u_pulse_radius", pulse.radius);
 		shader->setUniform("u_pulse_active", pulse.active);
-		if(material->diffuse)shader->setTexture("u_texture", material->diffuse, 0);
+		if(material->diffuse){
+			shader->setTexture("u_texture", material->diffuse, 0);
+			shader->setUniform("u_is_texture", 0);
+		}
 
+		else shader->setUniform("u_is_texture", 1);
 
+		shader->setUniform("u_isinstanced", isInstanced);
 		// Render the mesh using the active shader
 		mesh->render(GL_TRIANGLES);
 

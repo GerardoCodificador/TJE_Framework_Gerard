@@ -4,7 +4,9 @@
 void EntityCollider::update(float elapsed_time,Camera& camera) {
 	if (!parent) return;
 	if(is_dynamic||!is_initialized){
+		
 		EntityMesh* parentMesh = static_cast<EntityMesh*>(parent);
+		isInstanced = parentMesh->isInstanced;
 		if (!parentMesh->mesh) return;
 		if (!isInstanced) {
 			BoundingBox worldBox = transformBoundingBox(parentMesh->model, parentMesh->mesh->box);
@@ -26,13 +28,21 @@ void EntityCollider::update(float elapsed_time,Camera& camera) {
 		else {
 			positions.clear();
 			sphereRadiusses.clear();
-			for (int i = 0; i < (int)models.size() && i < (int)colliders.size(); i++) {
-				models[i] = parentMesh->models[i];
+			models.clear();
+			
+			for (int i = 0; i < (int)parentMesh->models.size() && i < (int)colliders.size(); i++) {
+				models.push_back(parentMesh->models[i]);
 				positions.push_back(colliders[i].center);
 				sphereRadiusses.push_back(colliders[i].halfsize.length());
 			}
 		}
 		is_initialized = true;
+	}
+	if (World::player->transport_to_spawn) {
+		if (layer == SPAWNER) {
+			World::player->model.setTranslation(collider.center + Vector3(0,collider.halfsize.y,0));
+			World::player->transport_to_spawn = false;
+		}
 	}
 	Entity::update(elapsed_time, camera);
 }
@@ -109,8 +119,11 @@ bool EntityCollider::TestCollisionSphere(float radius, const Vector3& center, st
 			usedPos = positions[closest];
 			sphereRadius = sphereRadiusses[closest];
 		}
-		dirtoobj = (usedPos - center);
-		if (dirtoobj.length() < (sphereRadius + radius)) {
+		Vector3 dir = usedPos - center;
+		float distSq = dir.length()* dir.length();
+		float radii = sphereRadius + radius;
+
+		if (distSq < radii * radii) {
 			sCollisionData data = {
 			.col_point = usedPos+dirtoobj/2*sphereRadius/radius,
 			.col_normal = dirtoobj.normalize(),

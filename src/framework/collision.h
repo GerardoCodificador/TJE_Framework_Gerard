@@ -16,7 +16,10 @@ enum eCollisionFilter {
 	ENEMY = 1 << 3,
 	ITEM = 1 << 4,
 	TYPENPC=1<<5,
+	SPAWNER=1<<6,
+	DOOR=1<<7,
 	SCENARIO = FLOOR | WALL,
+	INTERACTIVE = TYPENPC | DOOR |ITEM,
 	ALL = 0xFF
 };
 

@@ -38,6 +38,24 @@ public:
     static bool isWall(const Entity* e) {
         return e->name.find("@wall") != std::string::npos;
     }
+    static bool isSpawner(const Entity* e) {
+        return e->name.find("@Spawner") != std::string::npos;
+    }
+    static bool isDoor(const Entity* e) {
+        return e->name.find("@door") != std::string::npos;
+    }
+    static bool isKeyDoor(const Entity* e) {
+        return e->name.find("@keydoor") != std::string::npos;
+    }
+    static bool isMainDoor(const Entity* e) {
+        return e->name.find("@Maindoor") != std::string::npos;
+    }
+    static bool isDoorSpawn(const Entity* e) {
+        return e->name.find("@spawndoor") != std::string::npos;
+    }
+    static bool isItem(const Entity* e) {
+        return e->name.find("@item") != std::string::npos;
+    }
     static World* DayMap;
     static World* NightMap;
     static Player* player;

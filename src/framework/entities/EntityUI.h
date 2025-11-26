@@ -16,6 +16,7 @@
 class EntityMesh;
 class EntityCollider;
 struct eUITYPE {};
+
 class EntityUI : public EntityMesh {
 public:
 	EntityUI() {};
@@ -24,6 +25,24 @@ public:
 	Vector2 size;
 
 	void Update(float elapsed_time, Camera& camera);
+	void Updateposition(Vector2 deltamove);
+	void render(Camera* camera);
+
+};
+enum eMouseState {
+	Out,
+	Hoover,
+	Active,
+	Clicked
+};
+class Button : public EntityUI {
+public:
+	Button() {};
+	Button(Vector2 pos, Vector2 new_size, const Material mat);
+	Vector2 position;
+	Vector2 size;
+	eMouseState state;
+	void update(float elapsed_time, Camera& camera);
 	void Updateposition(Vector2 deltamove);
 	void render(Camera* camera);
 

@@ -4,6 +4,7 @@
 #include "graphics/mesh.h"
 
 #include "framework/utils.h"
+#include "framework/entities/item.h"
 
 #include <fstream>
 
@@ -56,16 +57,32 @@ bool SceneParser::parse(const char* filename, Entity* root)
 		Material mat = render_data.material;
 		EntityMesh* new_entity = nullptr;
 
-		size_t tag = data.first.find("@tag");
-
-		if (tag != std::string::npos) {
-			Mesh* mesh = Mesh::Get("...");
+		size_t tag = data.first.find("@door");
+		size_t tag2 = data.first.find("@keydoor");
+		size_t tag3 = data.first.find("@Maindoor");
+		if (tag != std::string::npos|| tag3 != std::string::npos|| tag2 != std::string::npos) {
+			Mesh* mesh = Mesh::Get(mesh_name.c_str());
+			
+			new_entity = new Door(mesh, mat);
+			
 			// Create a different type of entity
 			// new_entity = new ...
 		}
 		else {
-			Mesh* mesh = Mesh::Get(mesh_name.c_str());
-			new_entity = new EntityMesh(mesh, mat);
+			tag = data.first.find("@item");
+			if (tag != std::string::npos) {
+				Mesh* mesh = Mesh::Get(mesh_name.c_str());
+				new_entity = new Item(mesh, mat);
+				// Create a different type of entity
+				// new_entity = new ...
+				for (int i = 0; i < render_data.models.size();i++) {
+					static_cast<Item*>(new_entity)->active.push_back(true);
+				}
+			}
+			else{
+				Mesh* mesh = Mesh::Get(mesh_name.c_str());
+				new_entity = new EntityMesh(mesh, mat);
+			}
 		}
 
 		if (!new_entity) {
