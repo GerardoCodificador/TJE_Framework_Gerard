@@ -48,7 +48,7 @@ public:
 	void onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type);
 	void update(float elapsed_time,Camera& camera);
 	void render(Camera* camera);
-
+	void renderUI(Camera* camera);
 	void onResize(Vector2 prev,Vector2 next);
 
 	void MoveTo(const vec3& pos)

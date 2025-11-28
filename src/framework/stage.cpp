@@ -3,7 +3,7 @@
 #include <fstream>
 #include <cmath>
 #include <algorithm>
-
+#include "graphics/render_to_texture.h"
 #include "framework/input.h"
 #include "framework/pulse.h"
 #include "game/game.h"
@@ -41,12 +41,16 @@ void GameDayStage::Init() {
 }
 void GameDayStage::OnEnter(Stage* last_stage) {
 	//init game stage
+
+	World::player->canrender = true;
 	Game::instance->setMouseLocked(true);
 
 	World::player->MoveTo(vec3(0.0));
 }
 void GameDayStage::OnExit(Stage* last_stage) {
 	//cleanup game stage
+
+	World::player->canrender = false;
 }
 
 
@@ -180,6 +184,8 @@ void GameNightStage::Init() {
 }
 void GameNightStage::OnEnter(Stage* last_stage) {
 	//init menu stage
+
+	World::player->canrender = true;
 	BASS_ChannelPlay(hSampleChannel, false);
 
 	Game::instance->setMouseLocked(true);
@@ -222,6 +228,7 @@ void GameNightStage::OnEnter(Stage* last_stage) {
 void GameNightStage::OnExit(Stage* last_stage) {
 
 	//cleanup menu stage
+	World::player->canrender = false;
 }
 void GameNightStage::Update(float deltaTime,Camera& camera) {
 	//update menu stage
@@ -262,8 +269,12 @@ void GameNightStage::Update(float deltaTime,Camera& camera) {
 
 }
 void GameNightStage::Render(Camera& camera) {
-	World::NightMap->Render(camera);
 	
+	
+	World::NightMap->Render(camera);
+
+	
+
 }
 bool GameNightStage::onKeyDown(SDL_KeyboardEvent event) {
 	World::NightMap->onKeyDown(event);

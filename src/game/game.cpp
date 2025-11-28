@@ -11,13 +11,16 @@
 #include <cmath>
 #include "framework/pulse.h"
 #include "framework/stage.h"
+#include "graphics/render_to_texture.h"
 
 //some globals
 
 float mouse_gspeed = 1.0f;
+RenderToTexture * rt = nullptr;
 
 std::map<eStage, Stage*> stages;
 Game* Game::instance = NULL;
+Shader* fx_shader;
 EntityMesh* ent=nullptr;
 Game::Game(int window_width, int window_height, SDL_Window* window)
 {
@@ -47,8 +50,15 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	stages[eStage::GAMEOVER]->Init();
 	mouse_glocked = false;
 	SDL_ShowCursor(!mouse_glocked);
+	fx_shader = Shader::Get("data/shaders/screen.vs", "data/shaders/postfx.fs");
 
 	
+	if (!rt)
+	{
+		rt = new RenderToTexture();
+		rt->create(Game::instance->window_width, Game::instance->window_height);
+	}
+	World::player->canrender = false;
 }
 
 //what to do when the image has to be draw
@@ -58,24 +68,37 @@ void Game::render(void)
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 
 	// Clear the window and the depth buffer
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Set the camera as default
 	camera->enable();
 	// Set flags
 
 
+
+	
 	// Create model matrix for cube
+	rt->enable();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	stages[currentStage]->Render(*camera);
+	rt->disable();
+	glDisable(GL_DEPTH_TEST);
+
+
+	rt->toViewport(fx_shader);
+	World::player->renderUI(camera);
 
 	// Draw the floor grid
 	//drawGrid();
 
 	// Render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
+	
 
 	// Swap between front buffer and back buffer
 	SDL_GL_SwapWindow(this->window);
+
+
 }
 
 void Game::update(double seconds_elapsed)
@@ -145,6 +168,8 @@ void Game::onResize(int width, int height)
 	window_height = height;
 	Vector2 next= Vector2(window_width, window_height);
 	World::player->onResize(previous, next);
+	rt = new RenderToTexture();
+	rt->create(window_width, window_height);
 }
 
 void Game::setMouseLocked(bool must_lock)

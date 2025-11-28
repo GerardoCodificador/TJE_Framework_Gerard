@@ -54,7 +54,8 @@ public:
 	Vector2 position;
 	Vector2 size;
 	eMouseState state;
-	void update(float elapsed_time, Camera& camera);
+	/*void update(float elapsed_time, Camera& camera);
 	void Updateposition(Vector2 deltamove);
 	void render(Camera* camera);
+	*/
 };

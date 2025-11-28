@@ -42,23 +42,12 @@ void main() {
         final_color = texture(u_texture, uv);
     }
 
-    // ---------------------------
-    // 2) ILUMINACIÓN RADIAL DESDE EL PLAYER
-    // ---------------------------
-    float max_light_distance = u_pulse_radius;  
-    float min_light = 0.1;           
-
-    float light_dist = length(world_position - u_pulse_center);
-    float light_factor = 1.0 - clamp(light_dist / max_light_distance, 0.0, 1.0);
-    light_factor = mix(min_light, 1.0, light_factor);
-
-    final_color.rgb *= light_factor;
-
+   
  	vec3 N = normalize(v_normal);
     vec3 V = normalize(u_pulse_center - v_world_position);
     float edge_factor = dot(N, V);          // iluminación tipo Lambert simple
     edge_factor = clamp(edge_factor, 0.0, 1.0);
-    float edge_dark = 0.7 + 0.3 * edge_factor; // ajusta 0.3-0.7 para fuerza del borde
+    float edge_dark = 0.3 + 0.7 * edge_factor; // ajusta 0.3-0.7 para fuerza del borde
     final_color.rgb *= edge_dark;
 
     float mix_ratio = 0.0;

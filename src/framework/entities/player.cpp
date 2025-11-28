@@ -141,8 +141,6 @@ void Player::update(float deltatime,Camera& camera) {
 	else 
 		time *= 0.99f;
 	actualy = time;
-	pulse.radius = 2 + std::sin(time) * 0.3f;
-	pulse.center = position;
 
 	Vector2 move = Vector2(0, 0.02 * Game::instance->window_height * std::sin(actualy));
 
@@ -223,8 +221,12 @@ void Player::update(float deltatime,Camera& camera) {
 	Vector3 up = Vector3(0, 1, 0);
 	camera.lookAt(eye, center, up);
 	Entity::update(deltatime, camera);
+	pulse.radius = 2 + std::sin(time) * 0.3f;
+	pulse.center = eye;
+
 }
 void Player::render(Camera* camera) {
+	if (!canrender) return;
 	//Shader* shader;
 	//shader = Shader::Get("data/shaders/HUD.vs", "data/shaders/HUD.fs");
 	//Mesh* hudQuad=new Mesh();
@@ -293,10 +295,15 @@ void Player::render(Camera* camera) {
 
 	shader->disable();
 	*/
+	playerUI[0]->render(camera);
+	Entity::render(camera);
+}
+void Player::renderUI(Camera* camera) {
+	if (!canrender)return;
 	for (EntityUI* UI : playerUI) {
-
+		if (UI != playerUI[0])
 		UI->render(camera);
 	}
+
 	playerUI[1]->canrender = false;
-	Entity::render(camera);
 }
