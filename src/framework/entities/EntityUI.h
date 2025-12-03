@@ -23,9 +23,12 @@ public:
 	EntityUI(Vector2 pos, Vector2 new_size, const Material mat);
 	Vector2 position;
 	Vector2 size;
-
+	Entity* linkedesh;
+	bool check3D();
+	
 	void Update(float elapsed_time, Camera& camera);
 	void Updateposition(Vector2 deltamove);
+	void UpdateAspectRatio();
 	void render(Camera* camera);
 
 };

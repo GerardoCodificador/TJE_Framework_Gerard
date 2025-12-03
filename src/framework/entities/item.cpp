@@ -232,6 +232,19 @@ void Door::update(float elapsed_time, Camera& camera) {
 }
 void Door::onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type) {
 	if (Input::isKeyPressed(SDL_SCANCODE_E)) {
+		if (isOpen) {
+			int collided_i = static_cast<EntityCollider*>(children[0])->closest;
+			if (World::player->actual_stun == 0.0) {
+				World::player->max_stun = block_time;
+				World::player->actual_stun = block_time;
+				World::player->is_blackoff = blackofff;
+				World::player->model.setTranslation(DoorSpawns[(collided_i + 1) % 2].center + Vector3(0, DoorSpawns[(collided_i + 1) % 2].halfsize.y, 0));
+				World::player->canmove = false;
+				BASS_ChannelPlay(hSampleChannel, true);
+				isOpen = true;
+			}
+			return;
+		}
 		if(MyType ==NORMAL){
 			int collided_i = static_cast<EntityCollider*>(children[0])->closest;
 			if (World::player->actual_stun == 0.0) {
@@ -241,11 +254,13 @@ void Door::onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFi
 				World::player->model.setTranslation(DoorSpawns[(collided_i + 1) % 2].center + Vector3(0, DoorSpawns[(collided_i + 1) % 2].halfsize.y, 0));
 				World::player->canmove = false;
 				BASS_ChannelPlay(hSampleChannel, true);
+				isOpen = true;
 			}
 		}
 		else if (MyType == KEYED) {
 			if (World::player->inventory.keys > 0) {
 				std::cout << "Nice, the key fits in" << std::endl;
+				World::player->inventory.keys -= 1;
 				int collided_i = static_cast<EntityCollider*>(children[0])->closest;
 				if (World::player->actual_stun == 0.0) {
 					World::player->max_stun = block_time;
@@ -254,6 +269,7 @@ void Door::onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFi
 					World::player->model.setTranslation(DoorSpawns[(collided_i ) % 2].center + Vector3(0, DoorSpawns[(collided_i ) % 2].halfsize.y, 0));
 					World::player->canmove = false;
 					BASS_ChannelPlay(hSampleChannel, true);
+					isOpen = true;
 				}
 			}
 			else {

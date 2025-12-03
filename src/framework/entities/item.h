@@ -51,6 +51,7 @@ public:
 	std::vector<BoundingBox> DoorSpawns;
 	bool blackofff = true;
 	DoorType MyType;
+	bool isOpen = false;
 	void update(float elapsed_time, Camera& camera);
 	void render(Camera* camera);
 	void onColisionEnter(Entity* e, sCollisionData collisiondata, eCollisionFilter Type);

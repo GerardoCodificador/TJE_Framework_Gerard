@@ -50,6 +50,7 @@ public:
 	virtual ~EntityMesh() {}; 	// Destructor
 	// Attributes of the derived class  
 	std::vector<Matrix44> getArrayofGlobalMatrix();
+	int collidedi;
 	Mesh* mesh = nullptr;
 	Texture* texture = nullptr;
 	bool isInstanced = false;

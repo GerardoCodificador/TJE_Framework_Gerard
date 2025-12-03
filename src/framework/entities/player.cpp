@@ -72,6 +72,7 @@ void Player::onColisionEnter(Entity* e, sCollisionData collisiondata, eCollision
 	}
 	if (Type & INTERACTIVE) {		
 		playerUI[1]->canrender=true;
+		playerUI[1]->linkedesh=e;
 		if (collisiondata.collider->type==BOX) 
 			canmove = false;
 	}
@@ -98,6 +99,7 @@ void Player::update(float deltatime,Camera& camera) {
 		actual_stun = 0;
 	}
 	playerUI[2]->canrender = is_blackoff;
+
 	// Create matrices individually and join them
 	Matrix44 mYaw;
 	mYaw.setRotation(yaw, Vector3(0, 1, 0));
@@ -222,9 +224,13 @@ void Player::update(float deltatime,Camera& camera) {
 	camera.lookAt(eye, center, up);
 	Entity::update(deltatime, camera);
 	pulse.color = vec3(1.0, 0.78, 0.45);
-	pulse.radius = 2 + std::sin(time) * 0.3f;
-	pulse.center = eye;
+	pulse.radius = 4 ;
+	pulse.center = eye + 0.1 * mRotation.frontVector().normalize()-right * 0.1 -Vector3(0,0.05- std::sin(time) * 0.01f,0);
+	for (EntityUI* UI : playerUI) {
+		UI->Update(deltatime, camera);
 
+		UI->UpdateAspectRatio();
+	}
 }
 void Player::render(Camera* camera) {
 	if (!canrender) return;

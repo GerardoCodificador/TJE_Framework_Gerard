@@ -1,23 +1,58 @@
 #include "framework/entities/EntityUI.h"
-
+float previous_aspectratio;
 EntityUI::EntityUI(Vector2 pos, Vector2 new_size, const Material mat) {
 	material = new Material();
 	material->shader = mat.shader;       // si quieres reusar
 	material->diffuse = mat.diffuse;
 	position = Vector2(pos.x / Game::instance->window_width, pos.y / Game::instance->window_height);
 	size =Vector2(new_size.x / Game::instance->window_width, new_size.y / Game::instance->window_height);
+	linkedesh = nullptr;
 	mesh = new Mesh();
 
 	mesh->createQuad(position.x,position.y,size.x,size.y , false);
 	
 	mesh->uploadToVRAM();
+	previous_aspectratio = Game::instance->window_width / (float)Game::instance->window_height;
 }
-void EntityUI::Updateposition(Vector2 deltamove) {
-	Vector2 newpos= Vector2(position.x + deltamove.x / Game::instance->window_width, position.y + deltamove.y / Game::instance->window_height);
 
-	mesh->createQuad(newpos.x, newpos.y, size.x, size.y, false);
-
-	mesh->uploadToVRAM();
+void EntityUI::Updateposition(Vector2 deltamove) { 
+	Vector2 newpos = Vector2(position.x + deltamove.x / Game::instance->window_width, position.y + deltamove.y / Game::instance->window_height); 
+	mesh->createQuad(newpos.x, newpos.y, size.x, size.y, false); 
+	mesh->uploadToVRAM(); 
+}
+bool EntityUI::check3D() {
+	if (!linkedesh)return false;
+	return true;
+}
+void EntityUI::UpdateAspectRatio() {
+	float current_aspectratio = Game::instance->window_width / (float)Game::instance->window_height;
+	if (current_aspectratio != previous_aspectratio) {
+		Vector2 oldsize = size;
+		size.x = size.x * previous_aspectratio  / current_aspectratio;
+		position.x += (oldsize.x - size.x) * 0.5f;
+		position.y += (oldsize.y - size.y) * 0.5f;
+		mesh->createQuad(position.x, position.y, size.x, size.y, false);
+		mesh->uploadToVRAM();
+		previous_aspectratio = current_aspectratio;
+	}
+}
+void EntityUI::Update(float elapsed_time, Camera& camera) {
+	if (check3D()) {
+		EntityMesh* linkedmeshe = static_cast<EntityMesh*>(linkedesh);
+		Vector3 screenpos;
+		if (linkedmeshe->isInstanced) {
+			int collided_i = static_cast<EntityCollider*>(linkedmeshe->children[0])->closest;
+			screenpos = camera.project(linkedmeshe->getArrayofGlobalMatrix()[collided_i].getTranslation(), Game::instance->window_width, Game::instance->window_height);
+		}
+		else screenpos = camera.project(linkedmeshe->getGlobalMatrix().getTranslation(),Game::instance->window_width, Game::instance->window_height);
+		position = Vector2(screenpos.x / Game::instance->window_width, screenpos.y / Game::instance->window_height);
+		if (screenpos.z < 0 || screenpos.z > 1.f)
+			canrender = false;
+		else
+			canrender = true;
+		mesh->createQuad(position.x, position.y, size.x, size.y, false);
+		mesh->uploadToVRAM();
+	}
 }
 void EntityUI::render(Camera* camera) {
 	if (!canrender)return;
