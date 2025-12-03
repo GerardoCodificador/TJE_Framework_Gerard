@@ -148,7 +148,9 @@ void EntityMesh::render(Camera* camera) {
 		shader->setUniform3("u_pulse_center", pulse.center);
 		shader->setUniform("u_pulse_radius", pulse.radius);
 		shader->setUniform("u_pulse_active", pulse.active);
+		shader->setUniform("u_specular_strength", (float)0.05);
 
+		shader->setUniform("u_shininess", (float)10);
 		shader->setUniform("u_isinstanced", isInstanced);
 		if (material->diffuse) {
 			shader->setTexture("u_texture", material->diffuse, 0);
@@ -179,6 +181,9 @@ void EntityMesh::render(Camera* camera) {
 		shader->setUniform3("u_pulse_center", pulse.center);
 		shader->setUniform("u_pulse_radius", pulse.radius);
 		shader->setUniform("u_pulse_active", pulse.active);
+		shader->setUniform("u_specular_strength", (float)0.05);
+
+		shader->setUniform("u_shininess", (float)10);
 		if(material->diffuse){
 			shader->setTexture("u_texture", material->diffuse, 0);
 			shader->setUniform("u_is_texture", 0);

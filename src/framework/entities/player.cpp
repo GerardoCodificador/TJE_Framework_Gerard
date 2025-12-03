@@ -221,6 +221,7 @@ void Player::update(float deltatime,Camera& camera) {
 	Vector3 up = Vector3(0, 1, 0);
 	camera.lookAt(eye, center, up);
 	Entity::update(deltatime, camera);
+	pulse.color = vec3(1.0, 0.78, 0.45);
 	pulse.radius = 2 + std::sin(time) * 0.3f;
 	pulse.center = eye;
 

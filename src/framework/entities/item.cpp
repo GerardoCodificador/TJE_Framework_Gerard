@@ -144,6 +144,9 @@ void Item::render(Camera* camera) {
 		shader->setUniform("u_pulse_color", pulse.color);
 		shader->setUniform("u_pulse_width", pulse.width);
 		shader->setUniform3("u_pulse_center", pulse.center);
+		shader->setUniform("u_specular_strength", (float)0.05);
+
+		shader->setUniform("u_shininess", (float)10);
 		shader->setUniform("u_pulse_radius", pulse.radius);
 		shader->setUniform("u_pulse_active", pulse.active);
 		if (material->diffuse) {
@@ -172,6 +175,9 @@ void Item::render(Camera* camera) {
 		shader->setUniform("u_color", material->color);
 		shader->setUniform("u_pulse_color", pulse.color);
 		shader->setUniform("u_pulse_width", pulse.width);
+		shader->setUniform("u_specular_strength", (float)0.05);
+
+		shader->setUniform("u_shininess", (float)10);
 		shader->setUniform3("u_pulse_center", pulse.center);
 		shader->setUniform("u_pulse_radius", pulse.radius);
 		shader->setUniform("u_pulse_active", pulse.active);
@@ -332,6 +338,9 @@ void Door::render(Camera* camera){
 		shader->setUniform("u_pulse_width", pulse.width);
 		shader->setUniform3("u_pulse_center", pulse.center);
 		shader->setUniform("u_pulse_radius", pulse.radius);
+		shader->setUniform("u_specular_strength", (float)0.05);
+
+		shader->setUniform("u_shininess", (float)10);
 		shader->setUniform("u_pulse_active", pulse.active);
 		if (material->diffuse) {
 			shader->setTexture("u_texture", material->diffuse, 0);
@@ -359,6 +368,9 @@ void Door::render(Camera* camera){
 		shader->setUniform("u_color", material->color);
 		shader->setUniform("u_pulse_color", pulse.color);
 		shader->setUniform("u_pulse_width", pulse.width);
+		shader->setUniform("u_specular_strength", (float)0.05);
+
+		shader->setUniform("u_shininess", (float)10);
 		shader->setUniform3("u_pulse_center", pulse.center);
 		shader->setUniform("u_pulse_radius", pulse.radius);
 		shader->setUniform("u_pulse_active", pulse.active);

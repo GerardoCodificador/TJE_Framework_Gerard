@@ -24,6 +24,8 @@ uniform int u_pulse_active;      // 1=activo, 0=inactivo
 uniform int u_is_texture;        // 1=usar textura, 0=color
 uniform sampler2D u_texture;     // textura base
 uniform int u_isinstanced;  	// 1=instanciado, 0=no instanciado
+uniform float u_specular_strength; // coeficiente de reflexión (0.0 - 1.0)
+uniform float u_shininess;         // dureza del brillo (ej: 8 - 128)
 // ---------------------------
 // VARYINGS
 // ---------------------------
@@ -32,52 +34,52 @@ varying vec3 v_world_position;
 varying vec4 v_color; 
 varying vec3 v_normal;          
 void main() {
-    vec2 uv = v_uv;
-    vec3 world_position = v_world_position;
-
-
     vec4 final_color = u_color;
 
     if(u_is_texture == 0){
-        final_color = texture(u_texture, uv);
+        final_color = texture(u_texture, v_uv);
     }
 
-   
- 	vec3 N = normalize(v_normal);
-    vec3 V = normalize(u_pulse_center - v_world_position);
-    float edge_factor = dot(N, V);          // iluminación tipo Lambert simple
-    edge_factor = clamp(edge_factor, 0.0, 1.0);
-    float edge_dark = 0.3 + 0.7 * edge_factor; // ajusta 0.3-0.7 para fuerza del borde
-    final_color.rgb *= edge_dark;
+    // -------- PHONG ---------
 
-    float mix_ratio = 0.0;
-    float check, dist;
 
-    if(u_pulse_active == 1){
-        vec3 adjusted_position = world_position - u_pulse_center;
-        dist = sdSphere(adjusted_position, u_pulse_radius);
+    vec3 N = normalize(v_normal);
 
-        check = when_lt(dist, 0.0) * when_gt(dist, -u_pulse_width);
-        float percentage = abs(dist) / abs(u_pulse_width);
-        mix_ratio = clamp(1.0 * check - percentage, 0.0, 1.0);
-    }
+    // Vector luz
+    vec3 light_vec = u_pulse_center - v_world_position;
+    float distance = length(light_vec);
+    vec3 L = normalize(light_vec);
 
-    if(u_pulse_active == 1){
-        vec4 dark_color = final_color * 0.05;
-        float light_strength = clamp((-dist) * 0.5, 0.0, 1.0);
-        light_strength = smoothstep(0.0, 1.0, light_strength);
+    // View ficticio desde la luz (ya que no hay cámara)
+    vec3 V = normalize(-light_vec);
 
-        if(dist < 0.0){
-            vec3 warm_tint = vec3(1.25, 1.10, 0.75);
-            vec4 light_color = mix(final_color, vec4(u_pulse_color, 1.0), mix_ratio);
-            light_color.rgb *= warm_tint;
-            gl_FragColor = mix(dark_color, light_color, light_strength);
-        }
-        else {
-            gl_FragColor = dark_color;
-        }
-    }
-    else {
-        gl_FragColor = final_color;
-    }
+    // Reflexión
+    vec3 R = reflect(-L, N);
+
+    // -------- ATENUACIÓN POR RADIO DEL PULSO --------
+    // Se desvanece suavemente al llegar a u_pulse_radius
+    float attenuation = 1.0 - smoothstep(
+        u_pulse_radius * 0.7,
+        u_pulse_radius,
+        distance
+    );
+
+    // -------- COMPONENTES PHONG --------
+    float ambient_strength  = 0.12;
+    float diffuse_strength  = max(dot(N, L), 0.0);
+   float specular_strength = pow(max(dot(R, V), 0.0), u_shininess)
+                          * u_specular_strength;
+
+    // -------- APLICAR COLOR DEL PULSO --------
+    vec3 ambient  = ambient_strength * final_color.rgb;
+    vec3 diffuse  = diffuse_strength * final_color.rgb * u_pulse_color;
+    vec3 specular = specular_strength * u_pulse_color;
+
+    // Aplicar atenuación
+    diffuse  *= attenuation;
+    specular *= attenuation;
+
+    // Resultado final
+    final_color.rgb = ambient + diffuse + specular;
+    gl_FragColor = final_color;
 }
